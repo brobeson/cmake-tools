@@ -5,9 +5,9 @@
 FindLizard
 ----------
 
-Lizard is a cyclomatic complexity analysis tool. See
-https://github.com/terryyin/lizard/. This modules looks for Lizard and provides
-a function to add Lizard scans to the build system.
+Lizard is a cyclomatic complexity analysis tool.
+See https://github.com/terryyin/lizard/.
+This modules looks for Lizard and provides a function to add Lizard scans to the build system.
 
 Result Variables
 ^^^^^^^^^^^^^^^^
@@ -31,8 +31,8 @@ Functions
 
 .. command:: add_lizard_target
 
-  This function adds a custom target to run Lizard. The target is run in
-  `CMAKE_CURRENT_SOURCE_DIR <https://cmake.org/cmake/help/latest/variable/CMAKE_CURRENT_SOURCE_DIR.html>`_.
+  This function adds a custom target to run Lizard.
+  The target is run in `CMAKE_CURRENT_SOURCE_DIR <https://cmake.org/cmake/help/latest/variable/CMAKE_CURRENT_SOURCE_DIR.html>`_.
 
   ::
 
@@ -41,15 +41,14 @@ Functions
       [ALL]
       [ARGUMENTS argument1 [argument2 ...]])
 
-  The ``name`` must be a unique target name. ``ALL`` is passed on to the
-  `add_custom_target() <https://cmake.org/cmake/help/latest/command/add_custom_target.html>`_
-  command. Use ``ARGUMENTS`` to specify command line arguments for Lizard. If
-  ``ARGUMENTS`` is omitted, Lizard is run without any command line arguments.
+  The ``name`` must be a unique target name.
+  ``ALL`` is passed on to the `add_custom_target() <https://cmake.org/cmake/help/latest/command/add_custom_target.html>`_ command.
+  Use ``ARGUMENTS`` to specify command line arguments for Lizard.
+  If ``ARGUMENTS`` is omitted, Lizard is run without any command line arguments.
 
-  You can create multiple lizard targets. This supports the use case of
-  scanning different parts of a project with different parameters. For example,
-  you might be more lenient on the length of unit test cases than functions in
-  your production code.
+  You can create multiple lizard targets.
+  This supports the use case of scanning different parts of a project with different parameters.
+  For example, you might be more lenient on the length of unit test cases than functions in your production code.
 
   Here is an example:
 

@@ -24,4 +24,5 @@ Module Reference
 .. toctree::
    :maxdepth: 1
    
+   cmake_tools_default_compile_options
    find_lizard

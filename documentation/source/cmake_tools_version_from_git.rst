@@ -1,0 +1,1 @@
+.. cmake-module:: ../../CMakeToolsVersionFromGit.cmake

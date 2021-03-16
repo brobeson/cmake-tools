@@ -25,4 +25,5 @@ Module Reference
    :maxdepth: 1
    
    cmake_tools_default_compile_options
+   cmake_tools_version_from_git
    find_lizard

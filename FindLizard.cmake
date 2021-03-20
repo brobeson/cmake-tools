@@ -81,7 +81,7 @@ if(Lizard_EXECUTABLE)
     RESULT_VARIABLE lizard_version_result
   )
   if(lizard_version_result)
-    message(WARNING "Unable to determine lizard version: ${lizard_version_result}")
+    message(WARNING "Unable to determine lizard version.")
   endif()
 endif()
 
@@ -91,6 +91,7 @@ find_package_handle_standard_args(
   REQUIRED_VARS Lizard_EXECUTABLE
   VERSION_VAR Lizard_VERSION
 )
+unset(Lizard_DIR CACHE)
 
 function(add_lizard_target name)
   if(NOT Lizard_FOUND)

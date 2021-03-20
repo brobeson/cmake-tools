@@ -1,0 +1,8 @@
+set(_path "${CMAKE_CURRENT_LIST_DIR}")
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(cmake-tools REQUIRED_VARS _path)
+mark_as_advanced(cmake-tools_DIR)
+unset(_path)
+if(cmake-tools_FOUND)
+  list(APPEND CMAKE_MODULE_PATH "${cmake-tools_DIR}")
+endif()

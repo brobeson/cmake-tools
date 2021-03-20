@@ -1,1 +1,3 @@
-documentation/build
+# Ignore all build directories. There is one in the documentation directory,
+# and there may be one at the root to create a distribution package.
+build/

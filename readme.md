@@ -6,8 +6,6 @@ These modules encapsulate CMake code that I often reuse in multiple projects.
 
 [![Documentation Status](https://readthedocs.org/projects/cmake-tools/badge/?version=latest)](https://cmake-tools.readthedocs.io/en/latest/?badge=latest)
 
-To get started with cmake-tools, [read the documentation](https://cmake-tools.readthedocs.io/en/latest/).
-
 1. [Getting Started](https://cmake-tools.readthedocs.io/en/latest/getting_started.html)
 1. [Module Reference](file:///home/brendan/repositories/cmake-tools/documentation/build/html/index.html#module-reference)
 

@@ -20,7 +20,7 @@ write_basic_package_version_file(
 if(WIN32)
   set(destination "cmake-tools")
 else()
-  set(destination "/usr/lib/cmake/cmake-tools")
+  set(destination "lib/cmake/cmake-tools")
 endif()
 install(
   FILES
@@ -32,17 +32,12 @@ install(
   DESTINATION "${destination}"
 )
 
+set(CPACK_DEBIAN_FILE_NAME "DEB-DEFAULT")
+set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "all")
 set(CPACK_PACKAGE_VENDOR brobeson)
 set(CPACK_PACKAGE_CONTACT "brobeson@users.noreply.github.com")
 set(CPACK_PACKAGE_CHECKSUM SHA256)
-if(WIN32)
-  configure_file(license license.txt COPYONLY)
-  set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_BINARY_DIR}/license.txt")
-else()
-  set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/license")
-endif()
-set(CPACK_DEBIAN_FILE_NAME "DEB-DEFAULT")
-set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "all")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/license.txt")
 set(CPACK_WIX_UPGRADE_GUID "9f9428b2-9809-4d9b-85e8-3c4f8845da3b")
 set(CPACK_WIX_CMAKE_PACKAGE_REGISTRY true)
 set(CPACK_WIX_PROPERTY_ARPHELPLINK "https://cmake-tools.readthedocs.io/en/latest/")

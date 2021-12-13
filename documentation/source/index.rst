@@ -25,5 +25,7 @@ Module Reference
    :maxdepth: 1
    
    cmake_tools_compile_options
+   cmake_tools_target_dependencies
    cmake_tools_version_from_git
    find_lizard
+   find_plantuml

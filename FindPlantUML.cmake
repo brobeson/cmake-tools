@@ -6,8 +6,9 @@ FindPlantUML
 ------------
 
 PlantUML is a tool that transforms a text file into various model diagrams. See
-https://plantuml.com for details about writing PlantUML files. This modules
-looks for PlantUML.
+https://plantuml.com for details about writing PlantUML files. This module looks
+for PlantUML. It prefers an invocation script installed by some PlantUML system
+packages, and falls back to running Java if a script is unavailable.
 
 Result Variables
 ^^^^^^^^^^^^^^^^
@@ -20,7 +21,7 @@ This module defines the following variables:
 
 .. variable:: PlantUML_VERSION
 
-  The version reported by ``plantuml --version``.
+  The version reported by ``plantuml -version``.
 
 .. variable:: PlantUML_EXECUTABLE
 
@@ -32,9 +33,14 @@ This module defines the following variables:
   The command you can use in ``execute_process()``. This abstracts away the
   need to check PlantUML_EXECUTABLE or PlantUML_JAR.
 
+Commands
+========
+
 .. command:: run_plantuml
 
-  Run PlantUML on *.puml* files to generate diagram images.
+  Run PlantUML on *.puml* files to generate diagram images. If
+  :variable:`PLANTUML_FOUND` is `false`, the command prints a warning and skips
+  running PlantUML.
 
   .. code-block:: cmake
 
@@ -51,17 +57,15 @@ This module defines the following variables:
 Examples
 ^^^^^^^^
 
-Render a timing diagram:
+Render design diagrams as SVG images:
 
 .. code-block:: cmake
 
   find_package(PlantUML)
-  if(PlantUML_FOUND)
-    execute_process(
-      COMMAND ${PlantUML_COMMAND} "${CMAKE_SOURCE_DIR}/timing_diagram.puml"
-      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    )
-  endif()
+  run_plantuml(
+    "${CMAKE_SOURCE_DIR}/design_diagrams"
+    PLANTUML_ARGS -tsvg
+  )
 
 #]=]
 

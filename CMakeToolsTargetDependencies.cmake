@@ -65,7 +65,7 @@ Commands
     Use this option to skip the PlantUML step.
 
   ``PLANTUML_ARGS``
-      See ``PLANTUML_ARGS`` for :command:`cmake_tools_run_plantuml`.
+      See ``PLANTUML_ARGS`` for :command:`run_plantuml`.
 
 Examples
 ^^^^^^^^
@@ -88,7 +88,7 @@ Post-process the PlantUML files before rendering the images.
 
   cmake_tools_make_target_dependency_graphs(NO_PLANTUML)
   # Do your post processing.
-  cmake_tools_run_plantuml("${CMAKE_BINARY_DIR}/dependency_graphs")
+  run_plantuml("${CMAKE_BINARY_DIR}/dependency_graphs")
 
 #]=]
 

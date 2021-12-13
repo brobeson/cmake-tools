@@ -11,6 +11,7 @@ dependencies. To use this module, just include it and call the function:
 .. code-block:: cmake
 
   include(CMakeToolsTargetDependencies)
+  cmake_tools_make_target_dependency_graphs()
 
 Commands
 ========
@@ -34,17 +35,19 @@ Commands
     targets.
 
   ``TARGET_EXCLUDES``
-    A list of regular expressions of project targets to exclude from the graph.
+    A list of regular expressions of project targets to exclude from the graphs.
 
   ``DEPENDENCY_EXCLUDES``
-    A list of regular expressions of target dependencies to exclude from the graph.
+    A list of regular expressions of target dependencies to exclude from the
+    graphs.
 
     .. warning::
 
       Remember CMake's rules for regular expressions and strings. For example,
       to exclude the ``stdc++fs`` library, the expression in CMake must be
-      ``"stdc\\+\\+fs". The expression needs to treat the "+" literally, and to
-      escape them for that purpose, the string needs "\\\\" instead of "\\".
+      ``"stdc\\+\\+fs"``. The expression needs to treat the "+" characters
+      literally, and to escape them for that purpose, the string needs "\\\\"
+      instead of "\\".
 
   ``VERBOSE``
     Print extra status messages.
@@ -62,7 +65,7 @@ Commands
     Use this option to skip the PlantUML step.
 
   ``PLANTUML_ARGS``
-      See ``PLANTUML_ARGS`` for :command:cmake_tools_run_plantuml.
+      See ``PLANTUML_ARGS`` for :command:`cmake_tools_run_plantuml`.
 
 .. command:: cmake_tools_run_plantuml
 
@@ -94,7 +97,7 @@ Post-process the PlantUML files before rendering the images.
 
 .. code-block:: cmake
 
-  cmake_tools_make_target_dependency_graphs()
+  cmake_tools_make_target_dependency_graphs(NO_PLANTUML)
   # Do your post processing.
   cmake_tools_run_plantuml("${CMAKE_BINARY_DIR}/dependency_graphs")
 

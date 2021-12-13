@@ -14,7 +14,7 @@ dependencies. To use this module, just include it and call the function:
   cmake_tools_make_target_dependency_graphs()
 
 Commands
-========
+^^^^^^^^
 
 .. command:: cmake_tools_make_target_dependency_graphs
 
@@ -68,7 +68,7 @@ Commands
       See ``PLANTUML_ARGS`` for :command:`cmake_tools_run_plantuml`.
 
 Examples
-========
+^^^^^^^^
 
 Diagram everything except unit tests. All the unit test targets end with "_test".
 

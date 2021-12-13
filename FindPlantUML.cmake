@@ -34,7 +34,7 @@ This module defines the following variables:
   need to check PlantUML_EXECUTABLE or PlantUML_JAR.
 
 Commands
-========
+^^^^^^^^
 
 .. command:: run_plantuml
 

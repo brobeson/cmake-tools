@@ -32,6 +32,22 @@ This module defines the following variables:
   The command you can use in ``execute_process()``. This abstracts away the
   need to check PlantUML_EXECUTABLE or PlantUML_JAR.
 
+.. command:: run_plantuml
+
+  Run PlantUML on *.puml* files to generate diagram images.
+
+  .. code-block:: cmake
+
+    run_plantuml(directory [PLANTUML_ARGS arg [arg ...]])
+
+  ``directory``
+    Run PlantUML on *.puml* files in this directory.
+
+  ``PLANTUML_ARGS``
+    A list of command line arguments to pass to the PlantUML command. The list
+    is empty by default. Do not specify PlantUML files to process; this function
+    specifies the files for you.
+
 Examples
 ^^^^^^^^
 
@@ -109,3 +125,15 @@ find_package_handle_standard_args(
   VERSION_VAR PlantUML_VERSION
   REASON_FAILURE_MESSAGE "Executable 'plantuml' not found and command 'java -jar plantuml.jar' failed"
 )
+
+function(run_plantuml directory)
+  if(NOT PlantUML_FOUND)
+    message(WARNING "Cannot run PlantUML; it is not installed")
+    return()
+  endif()
+  cmake_parse_arguments(plantuml "" "" "PLANTUML_ARGS" ${ARGN})
+  execute_process(
+    COMMAND ${PlantUML_COMMAND} ${ct_PLANTUML_ARGS} "*.puml"
+    WORKING_DIRECTORY "${directory}"
+  )
+endfunction()

@@ -67,17 +67,6 @@ Commands
   ``PLANTUML_ARGS``
       See ``PLANTUML_ARGS`` for :command:`cmake_tools_run_plantuml`.
 
-.. command:: cmake_tools_run_plantuml
-
-  .. code-block:: cmake
-
-    cmake_tools_run_plantuml([PLANTUML_ARGS arg [arg ...]])
-
-  ``PLANTUML_ARGS``
-    A list of command line arguments to pass to the PlantUML command. The list is
-    empty by default. Do not specify PlantUML files to process; this function
-    specifies the files for you.
-
 Examples
 ========
 
@@ -125,24 +114,12 @@ function(cmake_tools_make_target_dependency_graphs)
   _get_filtered_dependencies()
   _write_plantuml_file()
   if(NOT ct_NO_PLANTUML)
-    cmake_tools_run_plantuml("${ct_OUTPUT_DIRECTORY}")
+    _log(CHECK_START "Generating dependency graph")
+    run_plantuml("${ct_OUTPUT_DIRECTORY}")
+    _log(CHECK_PASS "done")
   endif()
   list(POP_BACK CMAKE_MESSAGE_INDENT)
   message(CHECK_PASS "done")
-endfunction()
-
-function(cmake_tools_run_plantuml directory)
-  if(NOT PlantUML_FOUND)
-    message(WARNING "Cannot run PlantUML; it is not installed")
-    return()
-  endif()
-  cmake_parse_arguments(ct "" "" "PLANTUML_ARGS" ${ARGN})
-  _log(CHECK_START "Generating dependency graph")
-  execute_process(
-    COMMAND ${PlantUML_COMMAND} "*.puml"
-    WORKING_DIRECTORY "${directory}"
-  )
-  _log(CHECK_PASS "done")
 endfunction()
 
 #===============================================================================

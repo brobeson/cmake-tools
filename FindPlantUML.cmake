@@ -39,8 +39,8 @@ Commands
 .. command:: run_plantuml
 
   Run PlantUML on *.puml* files to generate diagram images. If
-  :variable:`PLANTUML_FOUND` is `false`, the command prints a warning and skips
-  running PlantUML.
+  :variable:`PLANTUML_FOUND` is ``false``, the command prints a warning and
+  skips running PlantUML.
 
   .. code-block:: cmake
 

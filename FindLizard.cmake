@@ -7,7 +7,7 @@ FindLizard
 
 Lizard is a cyclomatic complexity analysis tool.
 See https://github.com/terryyin/lizard/.
-This modules looks for Lizard and provides a function to add Lizard scans to the build system.
+This module looks for Lizard and provides a function to add Lizard scans to the build system.
 
 Result Variables
 ^^^^^^^^^^^^^^^^

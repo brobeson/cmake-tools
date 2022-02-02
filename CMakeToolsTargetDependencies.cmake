@@ -136,6 +136,7 @@ function(_get_filtered_dependencies)
     list(APPEND all_dependencies ${dependencies})
   endforeach()
   list(REMOVE_DUPLICATES all_dependencies)
+  list(FILTER all_dependencies EXCLUDE REGEX "\\$<.*")
   _filter_by_regex(
     all_dependencies
     EXCLUDE_PATTERNS ${ct_DEPENDENCY_EXCLUDES}
@@ -200,6 +201,7 @@ endfunction()
 # that match a list of regular expressions.
 function(_filter_targets)
   _filter_ctest_targets()
+  _filter_utility_targets()
   list(LENGTH ct_TARGETS length)
   _log(STATUS "Found ${length} targets after filtering CMake targets")
   if(ct_TARGET_EXCLUDES)
@@ -221,6 +223,18 @@ function(_filter_ctest_targets)
     foreach(stage IN ITEMS "" "MemoryCheck" "Start" "Update" "Configure" "Build" "Test" "Coverage" "MemCheck" "Submit")
       list(REMOVE_ITEM ct_TARGETS ${type}${stage})
     endforeach()
+  endforeach()
+  set(ct_TARGETS ${ct_TARGETS} PARENT_SCOPE)
+endfunction()
+
+# Remove CMake utility targets from the list of targets created by the project.
+# These are targets created by commands like add_custom_target().
+function(_filter_utility_targets)
+  foreach(target IN LISTS ct_TARGETS)
+    get_target_property(target_type ${target} TYPE)
+    if(target_type STREQUAL "UTILITY")
+      list(REMOVE_ITEM ct_TARGETS ${target})
+    endif()
   endforeach()
   set(ct_TARGETS ${ct_TARGETS} PARENT_SCOPE)
 endfunction()

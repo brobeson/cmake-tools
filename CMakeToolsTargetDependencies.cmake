@@ -110,6 +110,7 @@ function(cmake_tools_make_target_dependency_graphs)
   endif()
   message(CHECK_START "Building target dependency graphs")
   list(APPEND CMAKE_MESSAGE_INDENT "  ")
+  _clean_output_directory()
   _get_filtered_targets()
   _get_filtered_dependencies()
   _write_plantuml_file()
@@ -302,6 +303,14 @@ endfunction()
 # These are general purpose functions that can have multiple callees. So, they
 # follow a typical pattern of requiring the name of the output variable for
 # returning data.
+
+# Remove all files from the graph output directory.
+function(_clean_output_directory)
+  file(GLOB old_files LIST_DIRECTORIES false "${ct_OUTPUT_DIRECTORY}/*")
+  if(old_files)
+    file(REMOVE ${old_files})
+  endif()
+endfunction()
 
 # Convert a dependency to a format suitable for PlantUML.
 # Parameters:

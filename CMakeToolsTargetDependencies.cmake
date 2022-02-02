@@ -257,10 +257,12 @@ function(_write_plantuml_file)
   _log(CHECK_PASS "done")
 endfunction()
 
+# Write a PlantUML file for a specific target. This places the supplied target
+# as the root of the graph and shows only that target's dependencies.
 function(_write_target_specific_file target)
   set(project_file "${ct_OUTPUT_DIRECTORY}/${target}.puml")
   file(WRITE "${project_file}" "@startuml\nskinparam linetype ortho\n")
-  _write_targets_to_plantuml_file("${whole_project_file}" ${target})
+  _write_targets_to_plantuml_file("${project_file}" ${target})
   get_target_property(libraries ${target} LINK_LIBRARIES)
   _group_dependencies("${project_file}" ${libraries})
   _write_dependencies_to_plantuml_file("${project_file}" ${target})

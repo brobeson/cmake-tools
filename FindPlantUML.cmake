@@ -6,9 +6,8 @@ FindPlantUML
 ------------
 
 PlantUML is a tool that transforms a text file into various model diagrams. See
-https://plantuml.com for details about writing PlantUML files. This module looks
-for PlantUML. It prefers an invocation script installed by some PlantUML system
-packages, and falls back to running Java if a script is unavailable.
+https://plantuml.com for details about writing PlantUML files. This modules
+looks for PlantUML.
 
 Result Variables
 ^^^^^^^^^^^^^^^^
@@ -21,7 +20,7 @@ This module defines the following variables:
 
 .. variable:: PlantUML_VERSION
 
-  The version reported by ``plantuml -version``.
+  The version reported by ``plantuml --version``.
 
 .. variable:: PlantUML_EXECUTABLE
 
@@ -33,39 +32,20 @@ This module defines the following variables:
   The command you can use in ``execute_process()``. This abstracts away the
   need to check PlantUML_EXECUTABLE or PlantUML_JAR.
 
-Commands
-^^^^^^^^
-
-.. command:: run_plantuml
-
-  Run PlantUML on *.puml* files to generate diagram images. If
-  :variable:`PLANTUML_FOUND` is ``false``, the command prints a warning and
-  skips running PlantUML.
-
-  .. code-block:: cmake
-
-    run_plantuml(directory [PLANTUML_ARGS arg [arg ...]])
-
-  ``directory``
-    Run PlantUML on *.puml* files in this directory.
-
-  ``PLANTUML_ARGS``
-    A list of command line arguments to pass to the PlantUML command. The list
-    is empty by default. Do not specify PlantUML files to process; this function
-    specifies the files for you.
-
 Examples
 ^^^^^^^^
 
-Render design diagrams as SVG images:
+Render a timing diagram:
 
 .. code-block:: cmake
 
   find_package(PlantUML)
-  run_plantuml(
-    "${CMAKE_SOURCE_DIR}/design_diagrams"
-    PLANTUML_ARGS -tsvg
-  )
+  if(PlantUML_FOUND)
+    execute_process(
+      COMMAND ${PlantUML_COMMAND} "${CMAKE_SOURCE_DIR}/timing_diagram.puml"
+      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+    )
+  endif()
 
 #]=]
 
@@ -129,15 +109,3 @@ find_package_handle_standard_args(
   VERSION_VAR PlantUML_VERSION
   REASON_FAILURE_MESSAGE "Executable 'plantuml' not found and command 'java -jar plantuml.jar' failed"
 )
-
-function(run_plantuml directory)
-  if(NOT PlantUML_FOUND)
-    message(WARNING "Cannot run PlantUML; it is not installed")
-    return()
-  endif()
-  cmake_parse_arguments(plantuml "" "" "PLANTUML_ARGS" ${ARGN})
-  execute_process(
-    COMMAND ${PlantUML_COMMAND} ${ct_PLANTUML_ARGS} "*.puml"
-    WORKING_DIRECTORY "${directory}"
-  )
-endfunction()

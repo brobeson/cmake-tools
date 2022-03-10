@@ -11,10 +11,9 @@ dependencies. To use this module, just include it and call the function:
 .. code-block:: cmake
 
   include(CMakeToolsTargetDependencies)
-  cmake_tools_make_target_dependency_graphs()
 
 Commands
-^^^^^^^^
+========
 
 .. command:: cmake_tools_make_target_dependency_graphs
 
@@ -35,19 +34,17 @@ Commands
     targets.
 
   ``TARGET_EXCLUDES``
-    A list of regular expressions of project targets to exclude from the graphs.
+    A list of regular expressions of project targets to exclude from the graph.
 
   ``DEPENDENCY_EXCLUDES``
-    A list of regular expressions of target dependencies to exclude from the
-    graphs.
+    A list of regular expressions of target dependencies to exclude from the graph.
 
     .. warning::
 
       Remember CMake's rules for regular expressions and strings. For example,
       to exclude the ``stdc++fs`` library, the expression in CMake must be
-      ``"stdc\\+\\+fs"``. The expression needs to treat the "+" characters
-      literally, and to escape them for that purpose, the string needs "\\\\"
-      instead of "\\".
+      ``"stdc\\+\\+fs". The expression needs to treat the "+" literally, and to
+      escape them for that purpose, the string needs "\\\\" instead of "\\".
 
   ``VERBOSE``
     Print extra status messages.
@@ -65,10 +62,21 @@ Commands
     Use this option to skip the PlantUML step.
 
   ``PLANTUML_ARGS``
-      See ``PLANTUML_ARGS`` for :command:`run_plantuml`.
+      See ``PLANTUML_ARGS`` for :command:cmake_tools_run_plantuml.
+
+.. command:: cmake_tools_run_plantuml
+
+  .. code-block:: cmake
+
+    cmake_tools_run_plantuml([PLANTUML_ARGS arg [arg ...]])
+
+  ``PLANTUML_ARGS``
+    A list of command line arguments to pass to the PlantUML command. The list is
+    empty by default. Do not specify PlantUML files to process; this function
+    specifies the files for you.
 
 Examples
-^^^^^^^^
+========
 
 Diagram everything except unit tests. All the unit test targets end with "_test".
 
@@ -86,9 +94,9 @@ Post-process the PlantUML files before rendering the images.
 
 .. code-block:: cmake
 
-  cmake_tools_make_target_dependency_graphs(NO_PLANTUML)
+  cmake_tools_make_target_dependency_graphs()
   # Do your post processing.
-  run_plantuml("${CMAKE_BINARY_DIR}/dependency_graphs")
+  cmake_tools_run_plantuml("${CMAKE_BINARY_DIR}/dependency_graphs")
 
 #]=]
 
@@ -110,17 +118,28 @@ function(cmake_tools_make_target_dependency_graphs)
   endif()
   message(CHECK_START "Building target dependency graphs")
   list(APPEND CMAKE_MESSAGE_INDENT "  ")
-  _clean_output_directory()
   _get_filtered_targets()
   _get_filtered_dependencies()
   _write_plantuml_file()
   if(NOT ct_NO_PLANTUML)
-    _log(CHECK_START "Generating dependency graph")
-    run_plantuml("${ct_OUTPUT_DIRECTORY}")
-    _log(CHECK_PASS "done")
+    cmake_tools_run_plantuml("${ct_OUTPUT_DIRECTORY}")
   endif()
   list(POP_BACK CMAKE_MESSAGE_INDENT)
   message(CHECK_PASS "done")
+endfunction()
+
+function(cmake_tools_run_plantuml directory)
+  if(NOT PlantUML_FOUND)
+    message(WARNING "Cannot run PlantUML; it is not installed")
+    return()
+  endif()
+  cmake_parse_arguments(ct "" "" "PLANTUML_ARGS" ${ARGN})
+  _log(CHECK_START "Generating dependency graph")
+  execute_process(
+    COMMAND ${PlantUML_COMMAND} "*.puml"
+    WORKING_DIRECTORY "${directory}"
+  )
+  _log(CHECK_PASS "done")
 endfunction()
 
 #===============================================================================
@@ -136,7 +155,6 @@ function(_get_filtered_dependencies)
     list(APPEND all_dependencies ${dependencies})
   endforeach()
   list(REMOVE_DUPLICATES all_dependencies)
-  list(FILTER all_dependencies EXCLUDE REGEX "\\$<.*")
   _filter_by_regex(
     all_dependencies
     EXCLUDE_PATTERNS ${ct_DEPENDENCY_EXCLUDES}
@@ -201,7 +219,6 @@ endfunction()
 # that match a list of regular expressions.
 function(_filter_targets)
   _filter_ctest_targets()
-  _filter_utility_targets()
   list(LENGTH ct_TARGETS length)
   _log(STATUS "Found ${length} targets after filtering CMake targets")
   if(ct_TARGET_EXCLUDES)
@@ -227,18 +244,6 @@ function(_filter_ctest_targets)
   set(ct_TARGETS ${ct_TARGETS} PARENT_SCOPE)
 endfunction()
 
-# Remove CMake utility targets from the list of targets created by the project.
-# These are targets created by commands like add_custom_target().
-function(_filter_utility_targets)
-  foreach(target IN LISTS ct_TARGETS)
-    get_target_property(target_type ${target} TYPE)
-    if(target_type STREQUAL "UTILITY")
-      list(REMOVE_ITEM ct_TARGETS ${target})
-    endif()
-  endforeach()
-  set(ct_TARGETS ${ct_TARGETS} PARENT_SCOPE)
-endfunction()
-
 #===============================================================================
 # Functions for writing the PlantUML files.
 
@@ -257,12 +262,10 @@ function(_write_plantuml_file)
   _log(CHECK_PASS "done")
 endfunction()
 
-# Write a PlantUML file for a specific target. This places the supplied target
-# as the root of the graph and shows only that target's dependencies.
 function(_write_target_specific_file target)
   set(project_file "${ct_OUTPUT_DIRECTORY}/${target}.puml")
   file(WRITE "${project_file}" "@startuml\nskinparam linetype ortho\n")
-  _write_targets_to_plantuml_file("${project_file}" ${target})
+  _write_targets_to_plantuml_file("${whole_project_file}" ${target})
   get_target_property(libraries ${target} LINK_LIBRARIES)
   _group_dependencies("${project_file}" ${libraries})
   _write_dependencies_to_plantuml_file("${project_file}" ${target})
@@ -319,14 +322,6 @@ endfunction()
 # These are general purpose functions that can have multiple callees. So, they
 # follow a typical pattern of requiring the name of the output variable for
 # returning data.
-
-# Remove all files from the graph output directory.
-function(_clean_output_directory)
-  file(GLOB old_files LIST_DIRECTORIES false "${ct_OUTPUT_DIRECTORY}/*")
-  if(old_files)
-    file(REMOVE ${old_files})
-  endif()
-endfunction()
 
 # Convert a dependency to a format suitable for PlantUML.
 # Parameters:

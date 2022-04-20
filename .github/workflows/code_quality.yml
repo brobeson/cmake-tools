@@ -30,7 +30,7 @@ jobs:
       - name: Check the CMake version
         run: cmake --version
       - name: Run Tests
-        working_directory: tests
+        working-directory: tests
         run: |
           mkdir test_build
           cmake -S . -B test_build

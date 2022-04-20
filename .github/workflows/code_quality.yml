@@ -1,4 +1,4 @@
-name: Code Quality
+name: Tests
 
 on:
   workflow_dispatch:
@@ -6,13 +6,9 @@ on:
   pull_request:
     branches: [ main ]
 
-# env:
-#   SOURCE_DIRECTORY: source
-#   BUILD_DIRECTORY: build
-
 jobs:
   build:
-    name: Build and Test
+    name: Test
     strategy:
       fail-fast: false
       matrix:
@@ -21,14 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-        # with:
-        #   path: ${{env.SOURCE_DIRECTORY}}
       - name: Install CMake
         uses: jwlawson/actions-setup-cmake@v1.12
         with:
           cmake-version: ${{matrix.cmake_version}}
-      - name: Check the CMake version
-        run: cmake --version
       - name: Run Tests
         working-directory: tests
         run: |

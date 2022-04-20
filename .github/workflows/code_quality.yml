@@ -33,4 +33,5 @@ jobs:
         working-directory: tests
         run: |
           mkdir test_build
-          cmake -S . -B test_build
+          cd test_build
+          cmake ..

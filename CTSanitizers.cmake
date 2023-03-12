@@ -1,6 +1,27 @@
-set(_allowed_sanitizers asan msan tsan ubsan)
+# If the consumer uses an unsupported compiler & version, give them a warning
+# and bail out.
+if(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
+  if(NOT CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL "12.2.0")
+    message(WARNING "CT Sanitizers does not support GCC version ${CMAKE_CXX_COMPILER_VERSION}.")
+    return()
+  endif()
+  string(REGEX MATCH "[0-9]+" _major_version "${CMAKE_CXX_COMPILER_VERSION}")
+  set(_library_hints "/usr/lib/gcc/x86_64-linux-gnu/${_major_version}/")
+else()
+  message(WARNING "CT Sanitizers does not support ${CMAKE_CXX_COMPILER_ID}.")
+  return()
+endif()
 
-# Adapted from Professional CMake, Chapter 14.
+# Make sure the libraries are available on the system.
+find_library(_asan_library NAMES asan DOC "The path to the address sanitizer library." HINTS "${_library_hints}")
+if(NOT _asan_library)
+  message(WARNING "Cannot find libasan. Skipping ASan build configuation.")
+endif()
+
+# Add the sanitizers to the lists of allowed build types and build
+# configurations. I adapted sample code in Professional CMake, Chapter 14, into
+# this.
+set(_allowed_sanitizers ASan) # msan tsan ubsan)
 get_property(isMultiConfig GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 if(isMultiConfig)
   foreach(sanitizer IN LISTS _allowed_sanitizers)
@@ -18,75 +39,27 @@ else()
   endif()
 endif()
 
-include(CMakePrintHelpers)
-cmake_print_variables(CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
-
+# Set the required compiler and linker flags for each sanitizer build type.
 set(CMAKE_C_FLAGS_ASAN "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address -fno-omit-frame-pointer")
 set(CMAKE_CXX_FLAGS_ASAN "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address -fno-omit-frame-pointer")
 set(CMAKE_EXE_LINKER_FLAGS_ASAN "-lasan")
 
-#[[
-set(
-  CMAKE_TOOLS_SANITIZERS
-  ""
-  CACHE
-  STRING
-  "Add sanitizers to the build. Acceptable values are: ${_allowed_sanitizers}. You request multiple sanitizers by separating them with semicolons."
-)
-set_property(CACHE CMAKE_TOOLS_SANITIZERS PROPERTY STRINGS ${_allowed_sanitizers})
-if(NOT CMAKE_TOOLS_SANITIZERS OR CMAKE_TOOLS_SANITIZERS STREQUAL "none")
-  return()
+# Add tests to ensure the sanitizer is configured properly. To correctly handle
+# single- and multi-config generators, we build all the sanitizer tests, and
+# conditionally enable the correct test using a generator expression. Also, the
+# tests pass if the sanitizer caught the issue and output it to the console;
+# hence the PASS_REGULAR_EXPRESSION.
+#
+# NOTE: These are tests added to the consumer's build system. They aren't tests
+# for CMake Tools' software factory.
+include(CTest)
+if(BUILD_TESTING)
+  add_executable(ct_asan_test "${CMAKE_CURRENT_LIST_DIR}/ct_asan_test.cpp")
+  add_test(NAME ct_asan_test COMMAND ct_asan_test)
+  set_tests_properties(
+    ct_asan_test
+    PROPERTIES
+      DISABLED $<IF:$<CONFIG:asan>,false,true>
+      PASS_REGULAR_EXPRESSION "AddressSanitizer: heap-use-after-free"
+  )
 endif()
-
-# Do all this case-insensitive.
-string(TOLOWER CMAKE_TOOLS_SANITIZERS "${CMAKE_TOOLS_SANITIZERS}")
-if(CMAKE_TOOLS_SANITIZERS STREQUAL "none")
-  return()
-endif()
-
-# Only support a subset of compilers.
-if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  message(WARNING "CMakeToolsSanitizers does not support your compiler, ${CMAKE_CXX_COMPILER_ID}. You can go to https://github.com/brobeson/cmake-tools/issues to request support for your compiler.")
-  return()
-endif()
-
-# Ensure all requested sanitizers are valid.
-foreach(sanitizer IN LISTS CMAKE_TOOLS_SANITIZERS)
-  if(NOT sanitizer IN_LIST _allowed_sanitizers)
-    string(REPLACE ";" ", " _allowed_sanitizers "${_allowed_sanitizers}")
-    message(FATAL_ERROR "${sanitizer} is not a valid sanitizer. Valid sanitizers are ${_allowed_sanitizers}.")
-  endif()
-endforeach()
-
-# Ensure the user did not request mutually exclusive sanitizers.
-if(tsan IN_LIST CMAKE_TOOLS_SANITIZERS AND asan IN_LIST CMAKE_TOOLS_SANITIZERS)
-  message(FATAL_ERROR "You requested asan and tsan. These sanitizers are mutually exclusive. Please select just one.")
-endif()
-if(tsan IN_LIST CMAKE_TOOLS_SANITIZERS AND msan IN_LIST CMAKE_TOOLS_SANITIZERS)
-  message(FATAL_ERROR "You requested msan and tsan. These sanitizers are mutually exclusive. Please select just one.")
-endif()
-
-message(STATUS "Building with ${CMAKE_TOOLS_SANITIZERS}.")
-
-# Everything is OK. Set the compile and link options for the requested
-# sanitizers.
-if("asan" IN_LIST CMAKE_TOOLS_SANITIZERS)
-  add_compile_options()
-  add_link_options()
-endif()
-
-if("msan" IN_LIST CMAKE_TOOLS_SANITIZERS)
-  add_compile_options()
-  add_link_options()
-endif()
-
-if("tsan" IN_LIST CMAKE_TOOLS_SANITIZERS)
-  add_compile_options()
-  add_link_options()
-endif()
-
-if("ubsan" IN_LIST CMAKE_TOOLS_SANITIZERS)
-  add_compile_options()
-  add_link_options()
-endif()
-]]

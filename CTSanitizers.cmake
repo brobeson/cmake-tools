@@ -25,6 +25,12 @@ if(_tsan_library)
 else()
   message(WARNING "Cannot find libtsan. Skipping TSan build configuation.")
 endif()
+find_library(_ubsan_library NAMES ubsan DOC "The path to the undefined behavior sanitizer library." HINTS "${_library_hints}")
+if(_ubsan_library)
+  list(APPEND _allowed_sanitizers UBSan)
+else()
+  message(WARNING "Cannot find libubsan. Skipping UBSan build configuation.")
+endif()
 
 # Add the sanitizers to the lists of allowed build types and build
 # configurations. I adapted sample code in Professional CMake, Chapter 14, into
@@ -52,6 +58,8 @@ set(CMAKE_C_FLAGS_ASAN "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address -fno-omit-fr
 set(CMAKE_CXX_FLAGS_ASAN "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address -fno-omit-frame-pointer")
 set(CMAKE_C_FLAGS_TSAN "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=thread -fPIE -pie")
 set(CMAKE_CXX_FLAGS_TSAN "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=thread -fPIE -pie")
+set(CMAKE_C_FLAGS_UBSAN "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=undefined")
+set(CMAKE_CXX_FLAGS_UBSAN "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=undefined")
 
 # Add tests to ensure the sanitizer is configured properly. To correctly handle
 # single- and multi-config generators, we build all the sanitizer tests, and
@@ -79,5 +87,14 @@ if(BUILD_TESTING)
     PROPERTIES
       DISABLED $<IF:$<CONFIG:TSan>,false,true>
       PASS_REGULAR_EXPRESSION "ThreadSanitizer: data race"
+  )
+
+  add_executable(ct_ubsan_test "${CMAKE_CURRENT_LIST_DIR}/ct_ubsan_test.cpp")
+  add_test(NAME ct_ubsan_test COMMAND ct_ubsan_test)
+  set_tests_properties(
+    ct_ubsan_test
+    PROPERTIES
+      DISABLED $<IF:$<CONFIG:UBSan>,false,true>
+      PASS_REGULAR_EXPRESSION "runtime error: signed integer overflow"
   )
 endif()

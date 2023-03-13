@@ -14,14 +14,21 @@ endif()
 
 # Make sure the libraries are available on the system.
 find_library(_asan_library NAMES asan DOC "The path to the address sanitizer library." HINTS "${_library_hints}")
-if(NOT _asan_library)
+if(_asan_library)
+  list(APPEND _allowed_sanitizers ASan)
+else()
   message(WARNING "Cannot find libasan. Skipping ASan build configuation.")
+endif()
+find_library(_tsan_library NAMES tsan DOC "The path to the thread sanitizer library." HINTS "${_library_hints}")
+if(_tsan_library)
+  list(APPEND _allowed_sanitizers TSan)
+else()
+  message(WARNING "Cannot find libtsan. Skipping TSan build configuation.")
 endif()
 
 # Add the sanitizers to the lists of allowed build types and build
 # configurations. I adapted sample code in Professional CMake, Chapter 14, into
 # this.
-set(_allowed_sanitizers ASan) # msan tsan ubsan)
 get_property(isMultiConfig GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 if(isMultiConfig)
   foreach(sanitizer IN LISTS _allowed_sanitizers)
@@ -39,10 +46,12 @@ else()
   endif()
 endif()
 
-# Set the required compiler and linker flags for each sanitizer build type.
+# Set the required compiler flags for each sanitizer build type. The compiler
+# will handle linkg-time configuration.
 set(CMAKE_C_FLAGS_ASAN "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address -fno-omit-frame-pointer")
 set(CMAKE_CXX_FLAGS_ASAN "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address -fno-omit-frame-pointer")
-set(CMAKE_EXE_LINKER_FLAGS_ASAN "-lasan")
+set(CMAKE_C_FLAGS_TSAN "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=thread -fPIE -pie")
+set(CMAKE_CXX_FLAGS_TSAN "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=thread -fPIE -pie")
 
 # Add tests to ensure the sanitizer is configured properly. To correctly handle
 # single- and multi-config generators, we build all the sanitizer tests, and
@@ -59,7 +68,16 @@ if(BUILD_TESTING)
   set_tests_properties(
     ct_asan_test
     PROPERTIES
-      DISABLED $<IF:$<CONFIG:asan>,false,true>
+      DISABLED $<IF:$<CONFIG:ASan>,false,true>
       PASS_REGULAR_EXPRESSION "AddressSanitizer: heap-use-after-free"
+  )
+
+  add_executable(ct_tsan_test "${CMAKE_CURRENT_LIST_DIR}/ct_tsan_test.cpp")
+  add_test(NAME ct_tsan_test COMMAND ct_tsan_test)
+  set_tests_properties(
+    ct_tsan_test
+    PROPERTIES
+      DISABLED $<IF:$<CONFIG:TSan>,false,true>
+      PASS_REGULAR_EXPRESSION "ThreadSanitizer: data race"
   )
 endif()

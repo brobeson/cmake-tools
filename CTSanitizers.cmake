@@ -1,3 +1,178 @@
+# Distributed under the MIT License.
+# See https://github.com/brobeson/cmake-tools/blob/main/license for details.
+
+#[=[.rst:
+CTSanitizers
+------------
+
+Set up build types and configurations for sanitizers.
+
+.. warning::
+
+  This is module is experimental. I don't know if this is the best way to
+  abstract the sanitizer compile options, so the whole thing is subject to
+  change while I experiment with it.
+
+.. note::
+
+  CMake makes a distinction between build type for single-config generators and
+  build configuration for multi-config generators. For brevity, this
+  documentation just refers to build types, but the documented behavior applies
+  to build configurations, too. 
+
+This module automatically adds ``ASan``, ``MSan``, ``TSan``, and ``UBSan`` to
+your list of build types. If you select one of these build types, CMake sets up
+the correct C and C++ compiler options to use the corresponding sanitizer. The
+sanitizer build types extend CMake's built-in ``Debug`` build type.
+
+.. warning::
+
+  CTSanitizers does not ensure the sanitizer libraries are available. If you try
+  to use a sanitizer build type and don't have the corresponding library
+  installed, you will probably get a link error when you build your project.
+
+Using This Module
+^^^^^^^^^^^^^^^^^
+
+Follow the instructions in :doc:`getting_started` to bring CMake Tools into your
+project. Then include the module like you would any other module:
+
+.. code-block:: cmake
+
+  include(CTSanitizers)
+
+Then set your build type or build configuration like normal:
+
+.. code-block:: bash
+
+  cmake -D BUILD_TYPE:STRING=ASan -S . -B build/
+  cmake --build build/ --config ASan
+
+Build Types and Configurations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+CTSanitizers adds these build types to those already available:
+
+.. variable:: ASan
+
+  Create a debug build with `address sanitizer
+  <https://github.com/google/sanitizers/wiki/AddressSanitizer>`_.
+
+.. variable:: MSan
+
+  Create a debug build with `memory sanitizer
+  <https://github.com/google/sanitizers/wiki/MemorySanitizer>`_.
+
+.. variable:: TSan
+
+  Create a debug build with `thread sanitizer
+  <https://github.com/google/sanitizers/wiki/ThreadSanitizerCppManual>`_.
+
+.. variable:: UBSan
+
+  Create a debug build with `undefined behavior sanitizer
+  <https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html>`_.
+
+Supported Compilers
+^^^^^^^^^^^^^^^^^^^
+
+CTSanitizers requires that you use a supported compiler. If CTSanitizers does
+not support your compiler, the module will issue a warning and allow the CMake
+process to finish.
+
++----------+---------+-------------+
+| Compiler | Version | Status      |
++==========+=========+=============+
+| Clang    | 14      | Tested      |
++----------+---------+-------------+
+|          | 13      | Should Work |
++----------+---------+-------------+
+| GCC      | 11      | Tested      |
++----------+---------+-------------+
+|          | 10      | Should Work |
++----------+---------+-------------+
+
+Confirmation Tests
+^^^^^^^^^^^^^^^^^^
+
+The module also configures a simple test for each sanitizer and adds the tests
+to `CTest <https://cmake.org/cmake/help/latest/manual/ctest.1.html>`_. The tests
+contain simple errors that should be caught by the appropriate sanitizer. If the
+test passes, the sanitizer caught the error; if the test fails, the sanitizer
+did not catch the error. This provides consuming projects with a sanity check
+that CTSanitizers correctly configured the sanitizer.
+
+The tests are disabled unless the build type matches the appropriate sanitizer.
+For example, if you set your build type to ``ASan``, then ``ct_asan_test`` is
+enabled and ``ct_msan_test``, ``ct_tsan_test``, and ``ct_ubsan_test`` are
+disabled. If you set your build type to ``Debug``, then all four tests are
+disabled.
+
+.. variable:: ct_asan_test
+
+  This test confirms that address sanitizer is working. It attempts to use heap
+  memory after deallocating it (heap-use-after-free).
+
+.. variable:: ct_msan_test
+
+  This test confirms that memory sanitizer is working. It reads heap memory
+  without initializing it (use-of-uninitialized-value).
+
+.. variable:: ct_tsan_test
+
+  This test confirms that thread sanitizer is working. It contains a data race.
+
+.. variable:: ct_ubsan_test
+
+  This test confirms that undefined behavior sanitizer is working. It overflows
+  a signed integer.
+
+IDE Integration
+^^^^^^^^^^^^^^^
+
+There are ways to integrate these build types into your IDE. If your IDE isn't
+listed here, open an issue for me to document how to set up this integration.
+
+Visual Studio Code
+..................
+
+If you use Microsoft's cmake-tools extension for VS Code, you can add to the
+available variants with the ``cmake.defaultVariants`` setting. Here is a JSON
+snippet you can copy into your *settings.json* file.
+
+.. code-block:: json
+
+  "cmake.defaultVariants": {
+    "buildType": {
+      "default": "debug",
+      "description": "The build type.",
+      "choices": {
+        "asan": {
+          "short": "Address Sanitizer",
+          "long": "Debug build with address sanitizer.",
+          "buildType": "ASan"
+        },
+        "msan": {
+          "short": "Memory Sanitizer",
+          "long": "Debug build with memory sanitizer.",
+          "buildType": "MSan"
+        },
+        "tsan": {
+          "short": "Thread Sanitizer",
+          "long": "Debug build with thread sanitizer.",
+          "buildType": "TSan"
+        },
+        "ubsan": {
+          "short": "Undefined Behavior Sanitizer",
+          "long": "Debug build with undefined behavior sanitizer.",
+          "buildType": "UBSan"
+        }
+      }
+    }
+  }
+
+#]=]
+
 # If the consumer uses an unsupported compiler & version, give them a warning
 # and bail out.
 if(CMAKE_CXX_COMPILER_ID STREQUAL GNU)

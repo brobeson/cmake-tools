@@ -92,40 +92,16 @@ process to finish.
 |          | 10      | Should Work |
 +----------+---------+-------------+
 
-Confirmation Tests
-^^^^^^^^^^^^^^^^^^
+Confirmation Test
+^^^^^^^^^^^^^^^^^
 
-The module also configures a simple test for each sanitizer and adds the tests
-to `CTest <https://cmake.org/cmake/help/latest/manual/ctest.1.html>`_. The tests
-contain simple errors that should be caught by the appropriate sanitizer. If the
-test passes, the sanitizer caught the error; if the test fails, the sanitizer
-did not catch the error. This provides consuming projects with a sanity check
-that CTSanitizers correctly configured the sanitizer.
-
-The tests are disabled unless the build type matches the appropriate sanitizer.
-For example, if you set your build type to ``ASan``, then ``ct_asan_test`` is
-enabled and ``ct_msan_test``, ``ct_tsan_test``, and ``ct_ubsan_test`` are
-disabled. If you set your build type to ``Debug``, then all four tests are
-disabled.
-
-.. variable:: ct_asan_test
-
-  This test confirms that address sanitizer is working. It attempts to use heap
-  memory after deallocating it (heap-use-after-free).
-
-.. variable:: ct_msan_test
-
-  This test confirms that memory sanitizer is working. It reads heap memory
-  without initializing it (use-of-uninitialized-value).
-
-.. variable:: ct_tsan_test
-
-  This test confirms that thread sanitizer is working. It contains a data race.
-
-.. variable:: ct_ubsan_test
-
-  This test confirms that undefined behavior sanitizer is working. It overflows
-  a signed integer.
+The module also configures a simple test, ``ct_sanitizer_test``, to confirm that
+the sanitizer is configured correctly. The test contains a simple error that
+should be caught by the appropriate sanitizer. If the test passes, the sanitizer
+caught the error; if the test fails, the sanitizer did not catch the error. This
+provides consuming projects with a sanity check that CTSanitizers correctly
+configured the sanitizer. If the build type is not any of the sanitizers, the
+test just exits with success.
 
 IDE Integration
 ^^^^^^^^^^^^^^^
@@ -250,49 +226,29 @@ set(CMAKE_CXX_FLAGS_TSAN "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=thread -fPIE")# -p
 set(CMAKE_C_FLAGS_UBSAN "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=undefined")
 set(CMAKE_CXX_FLAGS_UBSAN "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=undefined")
 
-# Add tests to ensure the sanitizer is configured properly. To correctly handle
-# single- and multi-config generators, we build all the sanitizer tests, and
-# conditionally enable the correct test using a generator expression. Also, the
-# tests pass if the sanitizer caught the issue and output it to the console;
-# hence the PASS_REGULAR_EXPRESSION.
+# Add a test to ensure the sanitizer is configured properly. To correctly handle
+# single- and multi-config generators, use generator expressions to build the
+# correct C++ file and look for the correct sanitizer output.
 #
-# NOTE: These are tests added to the consumer's build system. They aren't tests
-# for CMake Tools' software factory.
+# NOTE: The test is added to the consumer's build system. It's not a test for
+# CMake Tools' software factory.
 include(CTest)
 if(BUILD_TESTING)
-  add_executable(ct_asan_test "${CMAKE_CURRENT_LIST_DIR}/ct_asan_test.cpp")
-  add_test(NAME ct_asan_test COMMAND ct_asan_test)
-  set_tests_properties(
-    ct_asan_test
-    PROPERTIES
-      DISABLED $<IF:$<CONFIG:ASan>,false,true>
-      PASS_REGULAR_EXPRESSION "AddressSanitizer: heap-use-after-free"
+  add_executable(ct_sanitizer_test)
+  target_sources(
+    ct_sanitizer_test
+    PRIVATE
+      "$<$<CONFIG:asan>:${CMAKE_CURRENT_LIST_DIR}/ct_asan_test.cpp>"
+      "$<$<CONFIG:msan>:${CMAKE_CURRENT_LIST_DIR}/ct_msan_test.cpp>"
+      "$<$<CONFIG:tsan>:${CMAKE_CURRENT_LIST_DIR}/ct_tsan_test.cpp>"
+      "$<$<CONFIG:ubsan>:${CMAKE_CURRENT_LIST_DIR}/ct_ubsan_test.cpp>"
+      "$<$<NOT:$<CONFIG:asan,msan,tsan,ubsan>>:${CMAKE_CURRENT_LIST_DIR}/ct_nosan_test.cpp>"
   )
-
-  add_executable(ct_tsan_test "${CMAKE_CURRENT_LIST_DIR}/ct_tsan_test.cpp")
-  add_test(NAME ct_tsan_test COMMAND ct_tsan_test)
+  add_test(NAME ct_sanitizer_test COMMAND ct_sanitizer_test)
   set_tests_properties(
-    ct_tsan_test
+    ct_sanitizer_test
     PROPERTIES
-      DISABLED $<IF:$<CONFIG:TSan>,false,true>
-      PASS_REGULAR_EXPRESSION "ThreadSanitizer: data race"
-  )
-
-  add_executable(ct_ubsan_test "${CMAKE_CURRENT_LIST_DIR}/ct_ubsan_test.cpp")
-  add_test(NAME ct_ubsan_test COMMAND ct_ubsan_test)
-  set_tests_properties(
-    ct_ubsan_test
-    PROPERTIES
-      DISABLED $<IF:$<CONFIG:UBSan>,false,true>
-      PASS_REGULAR_EXPRESSION "runtime error: signed integer overflow"
-  )
-
-  add_executable(ct_msan_test "${CMAKE_CURRENT_LIST_DIR}/ct_msan_test.cpp")
-  add_test(NAME ct_msan_test COMMAND ct_msan_test)
-  set_tests_properties(
-    ct_msan_test
-    PROPERTIES
-      DISABLED $<IF:$<CONFIG:msan>,false,true>
-      PASS_REGULAR_EXPRESSION "MemorySanitizer: use-of-uninitialized-value"
+      PASS_REGULAR_EXPRESSION
+        "$<$<CONFIG:asan>:AddressSanitizer: heap-use-after-free>$<$<CONFIG:msan>:MemorySanitizer: use-of-uninitialized-value>$<$<CONFIG:tsan>:ThreadSanitizer: data race>$<$<CONFIG:ubsan>:runtime error: signed integer overflow>"
   )
 endif()

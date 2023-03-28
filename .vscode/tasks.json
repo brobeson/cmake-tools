@@ -1,0 +1,19 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "CT: Build Documentation",
+      "icon": {
+        "id": "book",
+        "color": "terminal.ansiGreen"
+      },
+      "detail": "Use Sphinx to build the user documentation.",
+      "command": "make",
+      "args": ["html"],
+      "options": {
+        "cwd": "${workspaceFolder}/documentation"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

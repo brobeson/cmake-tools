@@ -42,7 +42,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: sudo apt install libidn11-dev
       - name: Install CMake
         uses: jwlawson/actions-setup-cmake@v1.13.1
         with:

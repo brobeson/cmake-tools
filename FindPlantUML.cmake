@@ -1,5 +1,5 @@
-# Distributed under the MIT License.
-# See https://github.com/brobeson/cmake-tools/blob/main/license for details.
+# Distributed under the MIT License. See
+# https://github.com/brobeson/cmake-tools/blob/main/license for details.
 
 #[=[.rst:
 FindPlantUML
@@ -67,18 +67,28 @@ Render design diagrams as SVG images:
     PLANTUML_ARGS -tsvg
   )
 
+Render a timing diagram:
+
+.. code-block:: cmake
+
+  if(PlantUML_FOUND)
+    execute_process(
+      COMMAND ${PlantUML_COMMAND} "${CMAKE_SOURCE_DIR}/timing_diagram.puml"
+      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+    )
+  endif()
+
 #]=]
 
 # By default, assume PlantUML is not installed.
 set(PlantUML_COMAND "PlantUML_COMMAND-NOTFOUND")
 
-# Check if the system has a wrapper script installed. Some systems, like
-# Ubuntu install a script that runs the PlantUML JAR file.
+# Check if the system has a wrapper script installed. Some systems, like Ubuntu
+# install a script that runs the PlantUML JAR file.
 find_program(
   PlantUML_EXECUTABLE
   NAMES plantuml
-  DOC "PlantUML wrapper script to run the PlantUML jar."
-)
+  DOC "PlantUML wrapper script to run the PlantUML jar.")
 mark_as_advanced(PlantUML_EXECUTABLE)
 
 # Prefer the wrapper script if it's available. If not, try to fall back to
@@ -94,9 +104,7 @@ else()
     execute_process(
       COMMAND ${Java_JAVA_EXECUTABLE} -jar plantuml.jar -version
       RESULT_VARIABLE command_failed
-      OUTPUT_QUIET
-      ERROR_QUIET
-    )
+      OUTPUT_QUIET ERROR_QUIET)
     if(NOT command_failed)
       set(PlantUML_COMMAND "java -jar plantuml.jar")
     endif()
@@ -109,14 +117,14 @@ execute_process(
   COMMAND "${PlantUML_COMMAND}" -version
   OUTPUT_VARIABLE PlantUML_VERSION
   OUTPUT_STRIP_TRAILING_WHITESPACE
-  RESULT_VARIABLE plantuml_version_result
-)
+  RESULT_VARIABLE plantuml_version_result)
 if(plantuml_version_result)
   set(PlantUML_VERSION "PlantUML_VERSION-NOTFOUND")
 else()
   string(REPLACE "\n" ";" PlantUML_VERSION "${PlantUML_VERSION}")
   list(GET PlantUML_VERSION 0 PlantUML_VERSION)
-  string(REGEX MATCH "[0-9]+.[0-9]+.[0-9]+" PlantUML_VERSION "${PlantUML_VERSION}")
+  string(REGEX MATCH "[0-9]+.[0-9]+.[0-9]+" PlantUML_VERSION
+               "${PlantUML_VERSION}")
   if(NOT PlantUML_VERSION)
     set(PlantUML_VERSION "PlantUML_VERSION-NOTFOUND")
   endif()
@@ -126,8 +134,10 @@ include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(
   PlantUML
   REQUIRED_VARS PlantUML_COMMAND
-  VERSION_VAR PlantUML_VERSION
-  REASON_FAILURE_MESSAGE "Executable 'plantuml' not found and command 'java -jar plantuml.jar' failed"
+  VERSION_VAR
+    PlantUML_VERSION
+    REASON_FAILURE_MESSAGE
+    "Executable 'plantuml' not found and command 'java -jar plantuml.jar' failed"
 )
 
 function(run_plantuml directory)
@@ -136,8 +146,6 @@ function(run_plantuml directory)
     return()
   endif()
   cmake_parse_arguments(plantuml "" "" "PLANTUML_ARGS" ${ARGN})
-  execute_process(
-    COMMAND ${PlantUML_COMMAND} ${ct_PLANTUML_ARGS} "*.puml"
-    WORKING_DIRECTORY "${directory}"
-  )
+  execute_process(COMMAND ${PlantUML_COMMAND} ${ct_PLANTUML_ARGS} "*.puml"
+                  WORKING_DIRECTORY "${directory}")
 endfunction()

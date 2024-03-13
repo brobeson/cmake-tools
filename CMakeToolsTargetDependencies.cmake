@@ -1,5 +1,5 @@
-# Distributed under the MIT License.
-# See https://github.com/brobeson/cmake-tools/blob/main/license for details.
+# Distributed under the MIT License. See
+# https://github.com/brobeson/cmake-tools/blob/main/license for details.
 
 #[=[.rst:
 CMakeToolsTargetDependencies
@@ -14,7 +14,7 @@ dependencies. To use this module, just include it and call the function:
   cmake_tools_make_target_dependency_graphs()
 
 Commands
-^^^^^^^^
+========
 
 .. command:: cmake_tools_make_target_dependency_graphs
 
@@ -66,9 +66,21 @@ Commands
 
   ``PLANTUML_ARGS``
       See ``PLANTUML_ARGS`` for :command:`run_plantuml`.
+      See ``PLANTUML_ARGS`` for :command:cmake_tools_run_plantuml.
+
+.. command:: cmake_tools_run_plantuml
+
+  .. code-block:: cmake
+
+    cmake_tools_run_plantuml([PLANTUML_ARGS arg [arg ...]])
+
+  ``PLANTUML_ARGS``
+    A list of command line arguments to pass to the PlantUML command. The list is
+    empty by default. Do not specify PlantUML files to process; this function
+    specifies the files for you.
 
 Examples
-^^^^^^^^
+========
 
 Diagram everything except unit tests. All the unit test targets end with "_test".
 
@@ -96,12 +108,8 @@ find_package(PlantUML)
 
 function(cmake_tools_make_target_dependency_graphs)
   cmake_parse_arguments(
-    ct
-    "NO_PLANTUML;VERBOSE"
-    "NAMESPACE;OUTPUT_DIRECTORY;SOURCE_DIRECTORY"
-    "DEPENDENCY_EXCLUDES;PLANTUML_ARGS;TARGET_EXCLUDES"
-    ${ARGN}
-  )
+    ct "NO_PLANTUML;VERBOSE" "NAMESPACE;OUTPUT_DIRECTORY;SOURCE_DIRECTORY"
+    "DEPENDENCY_EXCLUDES;PLANTUML_ARGS;TARGET_EXCLUDES" ${ARGN})
   if(NOT ct_SOURCE_DIRECTORY)
     set(ct_SOURCE_DIRECTORY "${CMAKE_SOURCE_DIR}")
   endif()
@@ -117,18 +125,30 @@ function(cmake_tools_make_target_dependency_graphs)
   if(NOT ct_NO_PLANTUML)
     _log(CHECK_START "Generating dependency graph")
     run_plantuml("${ct_OUTPUT_DIRECTORY}")
+    cmake_tools_run_plantuml("${ct_OUTPUT_DIRECTORY}")
     _log(CHECK_PASS "done")
   endif()
   list(POP_BACK CMAKE_MESSAGE_INDENT)
   message(CHECK_PASS "done")
 endfunction()
 
-#===============================================================================
+function(cmake_tools_run_plantuml directory)
+  if(NOT PlantUML_FOUND)
+    message(WARNING "Cannot run PlantUML; it is not installed")
+    return()
+  endif()
+  cmake_parse_arguments(ct "" "" "PLANTUML_ARGS" ${ARGN})
+  _log(CHECK_START "Generating dependency graph")
+  execute_process(COMMAND ${PlantUML_COMMAND} "*.puml"
+                  WORKING_DIRECTORY "${directory}")
+  _log(CHECK_PASS "done")
+endfunction()
+
+# ===============================================================================
 # Functions for gathering the list of allowed dependencies.
 
-# Get the list of dependencies allowed in the dependency graph.
-# Return the list of dependencies in ct_ALLOWED_DEPENDENCIES in the parent
-# scope.
+# Get the list of dependencies allowed in the dependency graph. Return the list
+# of dependencies in ct_ALLOWED_DEPENDENCIES in the parent scope.
 function(_get_filtered_dependencies)
   _log(CHECK_START "Filtering dependencies")
   foreach(target IN LISTS ct_TARGETS)
@@ -137,22 +157,21 @@ function(_get_filtered_dependencies)
   endforeach()
   list(REMOVE_DUPLICATES all_dependencies)
   list(FILTER all_dependencies EXCLUDE REGEX "\\$<.*")
-  _filter_by_regex(
-    all_dependencies
-    EXCLUDE_PATTERNS ${ct_DEPENDENCY_EXCLUDES}
-    LIST ${all_dependencies}
-  )
+  _filter_by_regex(all_dependencies EXCLUDE_PATTERNS ${ct_DEPENDENCY_EXCLUDES}
+                   LIST ${all_dependencies})
   list(SORT all_dependencies)
-  set(ct_ALLOWED_DEPENDENCIES ${all_dependencies} PARENT_SCOPE)
+  set(ct_ALLOWED_DEPENDENCIES
+      ${all_dependencies}
+      PARENT_SCOPE)
   list(LENGTH all_dependencies length)
   _log(CHECK_PASS "Found ${length} dependencies")
 endfunction()
 
-#===============================================================================
+# ===============================================================================
 # Functions for gathering the list of build targets.
 
-# Get the list of project targets allowed in the dependency graph.
-# Return the list of targets in ct_TARGETS in the parent scope.
+# Get the list of project targets allowed in the dependency graph. Return the
+# list of targets in ct_TARGETS in the parent scope.
 function(_get_filtered_targets)
   _log(CHECK_START "Searching for targets in ${CMAKE_SOURCE_DIR}")
   _get_defined_targets(ct_TARGETS "${ct_SOURCE_DIRECTORY}")
@@ -160,26 +179,28 @@ function(_get_filtered_targets)
   _log(STATUS "Found ${length} targets before filtering")
   _filter_targets()
   list(SORT ct_TARGETS)
-  set(ct_TARGETS ${ct_TARGETS} PARENT_SCOPE)
+  set(ct_TARGETS
+      ${ct_TARGETS}
+      PARENT_SCOPE)
   list(LENGTH ct_TARGETS length)
   _log(CHECK_PASS "Found ${length} targets")
 endfunction()
 
 # Get all the targets defined in a directory and its descendent directories.
 # Since this is a recursive function, it uses the typical pattern of IO
-# parameters instead of manipulating the parent scope.
-# Parameters:
-#   output: The variable to hold the list of found targets.
-#   root_directory: The directory to search for targets. The function searches
-#     descendent directories, too.
+# parameters instead of manipulating the parent scope. Parameters: output: The
+# variable to hold the list of found targets. root_directory: The directory to
+# search for targets. The function searches descendent directories, too.
 function(_get_defined_targets output root_directory)
   # Get targets defined in this directory, first.
-  get_directory_property(targets DIRECTORY "${root_directory}" BUILDSYSTEM_TARGETS)
+  get_directory_property(targets DIRECTORY "${root_directory}"
+                                           BUILDSYSTEM_TARGETS)
   list(LENGTH targets length)
   _log(STATUS "Found ${length} targets in ${root_directory}")
 
   # Search subdirectories.
-  get_directory_property(subdirectories DIRECTORY "${root_directory}" SUBDIRECTORIES)
+  get_directory_property(subdirectories DIRECTORY "${root_directory}"
+                                                  SUBDIRECTORIES)
   foreach(subdirectory IN LISTS subdirectories)
     if(subdirectory MATCHES "${CMAKE_BINARY_DIR}/_deps/.*")
       _log(STATUS "Skipping ${subdirectory}")
@@ -193,7 +214,9 @@ function(_get_defined_targets output root_directory)
   endforeach()
 
   # Hand it all back up the call stack.
-  set(${output} ${targets} PARENT_SCOPE)
+  set(${output}
+      ${targets}
+      PARENT_SCOPE)
 endfunction()
 
 # Remove unwanted targets from the list of all build targets. This removes
@@ -206,25 +229,38 @@ function(_filter_targets)
   _log(STATUS "Found ${length} targets after filtering CMake targets")
   if(ct_TARGET_EXCLUDES)
     _log(STATUS "Filtering by regular expressions: ${ct_TARGET_EXCLUDES}")
-    _filter_by_regex(
-      ct_TARGETS
-      EXCLUDE_PATTERNS ${ct_TARGET_EXCLUDES}
-      LIST ${ct_TARGETS}
-    )
+    _filter_by_regex(ct_TARGETS EXCLUDE_PATTERNS ${ct_TARGET_EXCLUDES} LIST
+                     ${ct_TARGETS})
     list(LENGTH ct_TARGETS length)
-    _log(STATUS "Found ${length} targets after filtering by regular expressions")
+    _log(STATUS
+         "Found ${length} targets after filtering by regular expressions")
   endif()
-  set(ct_TARGETS ${ct_TARGETS} PARENT_SCOPE)
+  set(ct_TARGETS
+      ${ct_TARGETS}
+      PARENT_SCOPE)
 endfunction()
 
 # Filter CTest targets out of the list of build targets.
 function(_filter_ctest_targets)
   foreach(type IN ITEMS "Experimental" "Nightly" "Continuous")
-    foreach(stage IN ITEMS "" "MemoryCheck" "Start" "Update" "Configure" "Build" "Test" "Coverage" "MemCheck" "Submit")
+    foreach(
+      stage IN
+      ITEMS ""
+            "MemoryCheck"
+            "Start"
+            "Update"
+            "Configure"
+            "Build"
+            "Test"
+            "Coverage"
+            "MemCheck"
+            "Submit")
       list(REMOVE_ITEM ct_TARGETS ${type}${stage})
     endforeach()
   endforeach()
-  set(ct_TARGETS ${ct_TARGETS} PARENT_SCOPE)
+  set(ct_TARGETS
+      ${ct_TARGETS}
+      PARENT_SCOPE)
 endfunction()
 
 # Remove CMake utility targets from the list of targets created by the project.
@@ -236,10 +272,12 @@ function(_filter_utility_targets)
       list(REMOVE_ITEM ct_TARGETS ${target})
     endif()
   endforeach()
-  set(ct_TARGETS ${ct_TARGETS} PARENT_SCOPE)
+  set(ct_TARGETS
+      ${ct_TARGETS}
+      PARENT_SCOPE)
 endfunction()
 
-#===============================================================================
+# ===============================================================================
 # Functions for writing the PlantUML files.
 
 # Write the PlantUML file.
@@ -263,6 +301,7 @@ function(_write_target_specific_file target)
   set(project_file "${ct_OUTPUT_DIRECTORY}/${target}.puml")
   file(WRITE "${project_file}" "@startuml\nskinparam linetype ortho\n")
   _write_targets_to_plantuml_file("${project_file}" ${target})
+  # _write_targets_to_plantuml_file("${whole_project_file}" ${target})
   get_target_property(libraries ${target} LINK_LIBRARIES)
   _group_dependencies("${project_file}" ${libraries})
   _write_dependencies_to_plantuml_file("${project_file}" ${target})
@@ -295,14 +334,15 @@ function(_group_dependencies plantuml_file)
     string(REGEX MATCH "([^:]+)::([^:]+)" unused "${dependency}")
     file(APPEND "${plantuml_file}" "frame \"${CMAKE_MATCH_1}\" {\n")
     _get_actual_dependency(actual_dependency ${dependency})
-    file(APPEND "${plantuml_file}" "[${CMAKE_MATCH_2}] as ${actual_dependency}\n")
+    file(APPEND "${plantuml_file}"
+         "[${CMAKE_MATCH_2}] as ${actual_dependency}\n")
     file(APPEND "${plantuml_file}" "}\n")
   endforeach()
 endfunction()
 
 # Write a target's dependencies and relationsships to a PlantUML file.
-# Parameters:
-#   target: The build target for which to write dependency relationships.
+# Parameters: target: The build target for which to write dependency
+# relationships.
 function(_write_dependencies_to_plantuml_file plantuml_file target)
   get_target_property(libraries ${target} LINK_LIBRARIES)
   list(SORT libraries)
@@ -314,48 +354,51 @@ function(_write_dependencies_to_plantuml_file plantuml_file target)
   endforeach()
 endfunction()
 
-#===============================================================================
-# Utility functions.
-# These are general purpose functions that can have multiple callees. So, they
-# follow a typical pattern of requiring the name of the output variable for
-# returning data.
+# ===============================================================================
+# Utility functions. These are general purpose functions that can have multiple
+# callees. So, they follow a typical pattern of requiring the name of the output
+# variable for returning data.
 
 # Remove all files from the graph output directory.
 function(_clean_output_directory)
-  file(GLOB old_files LIST_DIRECTORIES false "${ct_OUTPUT_DIRECTORY}/*")
+  file(
+    GLOB old_files
+    LIST_DIRECTORIES false
+    "${ct_OUTPUT_DIRECTORY}/*")
   if(old_files)
     file(REMOVE ${old_files})
   endif()
 endfunction()
 
-# Convert a dependency to a format suitable for PlantUML.
-# Parameters:
-#   output: The variable to hold the new dependency name.
-#   dependency: The dependency, as reported by CMake.
-# Returns:
-#   If `dependency` is an alias target defined by the project, return the target
-#     pointed to by the alias target.
-#   If `dependency` is a namespaced imported target, return the `dependency`
-#     : charaters changed to _ characters: Qt5::Core -> Qt5__Core
-#   Else return the `dependency` as is.
+# Convert a dependency to a format suitable for PlantUML. Parameters: output:
+# The variable to hold the new dependency name. dependency: The dependency, as
+# reported by CMake. Returns: If `dependency` is an alias target defined by the
+# project, return the target pointed to by the alias target. If `dependency` is
+# a namespaced imported target, return the `dependency` : charaters changed to _
+# characters: Qt5::Core -> Qt5__Core Else return the `dependency` as is.
 function(_get_actual_dependency output dependency)
   if(TARGET ${dependency})
     get_target_property(aliased_target ${dependency} ALIASED_TARGET)
     if(aliased_target)
-      set(${output} ${aliased_target} PARENT_SCOPE)
+      set(${output}
+          ${aliased_target}
+          PARENT_SCOPE)
       return()
     endif()
-    set(${output} ${dependency} PARENT_SCOPE)
+    set(${output}
+        ${dependency}
+        PARENT_SCOPE)
   endif()
   string(REPLACE ":" "_" dependency ${dependency})
-  set(${output} ${dependency} PARENT_SCOPE)
+  set(${output}
+      ${dependency}
+      PARENT_SCOPE)
 endfunction()
 
-# Write a message to the console if the user enabled `VERBOSE`.
-# Parameters:
-#   level: The level of the message. This must be a valid `mode` or `checkState`
-#     value for the `message()` command.
-#   ARGN: The values passed directly to the `message()` command for output.
+# Write a message to the console if the user enabled `VERBOSE`. Parameters:
+# level: The level of the message. This must be a valid `mode` or `checkState`
+# value for the `message()` command. ARGN: The values passed directly to the
+# `message()` command for output.
 function(_log level)
   if(NOT ct_VERBOSE)
     return()
@@ -367,23 +410,22 @@ function(_log level)
   if(level STREQUAL "CHECK_START")
     list(APPEND CMAKE_MESSAGE_INDENT "  ")
   endif()
-  set(CMAKE_MESSAGE_INDENT ${CMAKE_MESSAGE_INDENT} PARENT_SCOPE)
+  set(CMAKE_MESSAGE_INDENT
+      ${CMAKE_MESSAGE_INDENT}
+      PARENT_SCOPE)
 endfunction()
 
-# Remove elements from a list by regular expression.
-# Parameters:
-#   output: The variable to hold the filtered list to return to the calling
-#     function.
-#   EXCLUDE_PATTERNS pattern [pattern ...]
-#     The list of regular expressions to use for filtering list elements. If an
-#     element matches any of these patterns, the function removes it from the
-#     list.
-#   LIST item [item ...]
-#     The list to filter.
+# Remove elements from a list by regular expression. Parameters: output: The
+# variable to hold the filtered list to return to the calling function.
+# EXCLUDE_PATTERNS pattern [pattern ...] The list of regular expressions to use
+# for filtering list elements. If an element matches any of these patterns, the
+# function removes it from the list. LIST item [item ...] The list to filter.
 function(_filter_by_regex output)
   cmake_parse_arguments(filter "" "" "EXCLUDE_PATTERNS;LIST" ${ARGN})
   foreach(regex IN LISTS filter_EXCLUDE_PATTERNS)
     list(FILTER filter_LIST EXCLUDE REGEX "${regex}")
   endforeach()
-  set(${output} ${filter_LIST} PARENT_SCOPE)
+  set(${output}
+      ${filter_LIST}
+      PARENT_SCOPE)
 endfunction()

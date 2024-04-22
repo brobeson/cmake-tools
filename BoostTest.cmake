@@ -133,15 +133,18 @@ same as the Catch name; see also ``TEST_PREFIX`` and ``TEST_SUFFIX``.
     where the test has a better chance at finding appropriate runtime dependencies.
 
     ``DISCOVERY_MODE`` defaults to the value of the
-    ``CMAKE_boost_discover_tests_DISCOVERY_MODE`` variable if it is not passed when
+    ``CMAKE_BOOST_DISCOVER_TESTS_DISCOVERY_MODE`` variable if it is not passed when
     calling ``boost_discover_tests``. This provides a mechanism for globally selecting
     a preferred test discovery behavior without having to modify each call site.
 
 #]=======================================================================]
 
 #------------------------------------------------------------------------------
+include(CMakePrintHelpers)
 function(boost_discover_tests TARGET)
 
+  message(STATUS "Adding tests to ${TARGET}")
+  list(APPEND CMAKE_MESSAGE_INDENT "  ")
   cmake_parse_arguments(
     ""
     ""
@@ -158,27 +161,28 @@ function(boost_discover_tests TARGET)
   endif()
   if (_DL_PATHS)
     if(${CMAKE_VERSION} VERSION_LESS "3.22.0")
-        message(FATAL_ERROR "The DL_PATHS option requires at least cmake 3.22")
+      message(FATAL_ERROR "The DL_PATHS option requires at least cmake 3.22")
     endif()
   endif()
   if(NOT _DISCOVERY_MODE)
-    if(NOT CMAKE_boost_discover_tests_DISCOVERY_MODE)
-      set(CMAKE_boost_discover_tests_DISCOVERY_MODE "POST_BUILD")
+    if(NOT CMAKE_BOOST_DISCOVER_TESTS_DISCOVERY_MODE)
+      set(CMAKE_BOOST_DISCOVER_TESTS_DISCOVERY_MODE "POST_BUILD")
     endif()
-    set(_DISCOVERY_MODE ${CMAKE_boost_discover_tests_DISCOVERY_MODE})
+    set(_DISCOVERY_MODE ${CMAKE_BOOST_DISCOVER_TESTS_DISCOVERY_MODE})
   endif()
   if (NOT _DISCOVERY_MODE MATCHES "^(POST_BUILD|PRE_TEST)$")
     message(FATAL_ERROR "Unknown DISCOVERY_MODE: ${_DISCOVERY_MODE}")
   endif()
 
   ## Generate a unique name based on the extra arguments
-  string(SHA1 args_hash "${_TEST_SPEC} ${_EXTRA_ARGS} ${_REPORTER} ${_OUTPUT_DIR} ${_OUTPUT_PREFIX} ${_OUTPUT_SUFFIX}")
+  string(SHA1 args_hash "${_TEST_SPEC} ${_EXTRA_ARGS}")
   string(SUBSTRING ${args_hash} 0 7 args_hash)
 
   # Define rule to generate test list for aforementioned test executable
   set(ctest_file_base "${CMAKE_CURRENT_BINARY_DIR}/${TARGET}-${args_hash}")
   set(ctest_include_file "${ctest_file_base}_include.cmake")
   set(ctest_tests_file "${ctest_file_base}_tests.cmake")
+  cmake_print_variables(ctest_file_base ctest_include_file ctest_tests_file)
 
   get_property(crosscompiling_emulator
     TARGET ${TARGET}
@@ -206,7 +210,7 @@ function(boost_discover_tests TARGET)
               -D "TEST_OUTPUT_SUFFIX=${_OUTPUT_SUFFIX}"
               -D "TEST_DL_PATHS=${_DL_PATHS}"
               -D "CTEST_FILE=${ctest_tests_file}"
-              -P "${_boost_discover_tests_SCRIPT}"
+              -P "${_BOOST_DISCOVER_TESTS_SCRIPT}"
       VERBATIM
     )
 
@@ -218,63 +222,63 @@ function(boost_discover_tests TARGET)
       "endif()\n"
     )
 
-  elseif(_DISCOVERY_MODE STREQUAL "PRE_TEST")
+  # elseif(_DISCOVERY_MODE STREQUAL "PRE_TEST")
 
-    get_property(GENERATOR_IS_MULTI_CONFIG GLOBAL
-        PROPERTY GENERATOR_IS_MULTI_CONFIG
-    )
+  #   get_property(GENERATOR_IS_MULTI_CONFIG GLOBAL
+  #       PROPERTY GENERATOR_IS_MULTI_CONFIG
+  #   )
 
-    if(GENERATOR_IS_MULTI_CONFIG)
-      set(ctest_tests_file "${ctest_file_base}_tests-$<CONFIG>.cmake")
-    endif()
+  #   if(GENERATOR_IS_MULTI_CONFIG)
+  #     set(ctest_tests_file "${ctest_file_base}_tests-$<CONFIG>.cmake")
+  #   endif()
 
-    string(CONCAT ctest_include_content
-      "if(EXISTS \"$<TARGET_FILE:${TARGET}>\")"                                    "\n"
-      "  if(NOT EXISTS \"${ctest_tests_file}\" OR"                                 "\n"
-      "     NOT \"${ctest_tests_file}\" IS_NEWER_THAN \"$<TARGET_FILE:${TARGET}>\" OR\n"
-      "     NOT \"${ctest_tests_file}\" IS_NEWER_THAN \"\${CMAKE_CURRENT_LIST_FILE}\")\n"
-      "    include(\"${_boost_discover_tests_SCRIPT}\")"                           "\n"
-      "    boost_discover_tests_impl("                                             "\n"
-      "      TEST_EXECUTABLE"        " [==[" "$<TARGET_FILE:${TARGET}>"   "]==]"   "\n"
-      "      TEST_EXECUTOR"          " [==[" "${crosscompiling_emulator}" "]==]"   "\n"
-      "      TEST_WORKING_DIR"       " [==[" "${_WORKING_DIRECTORY}"      "]==]"   "\n"
-      "      TEST_SPEC"              " [==[" "${_TEST_SPEC}"              "]==]"   "\n"
-      "      TEST_EXTRA_ARGS"        " [==[" "${_EXTRA_ARGS}"             "]==]"   "\n"
-      "      TEST_PROPERTIES"        " [==[" "${_PROPERTIES}"             "]==]"   "\n"
-      "      TEST_PREFIX"            " [==[" "${_TEST_PREFIX}"            "]==]"   "\n"
-      "      TEST_SUFFIX"            " [==[" "${_TEST_SUFFIX}"            "]==]"   "\n"
-      "      TEST_LIST"              " [==[" "${_TEST_LIST}"              "]==]"   "\n"
-      "      TEST_REPORTER"          " [==[" "${_REPORTER}"               "]==]"   "\n"
-      "      TEST_OUTPUT_DIR"        " [==[" "${_OUTPUT_DIR}"             "]==]"   "\n"
-      "      TEST_OUTPUT_PREFIX"     " [==[" "${_OUTPUT_PREFIX}"          "]==]"   "\n"
-      "      TEST_OUTPUT_SUFFIX"     " [==[" "${_OUTPUT_SUFFIX}"          "]==]"   "\n"
-      "      CTEST_FILE"             " [==[" "${ctest_tests_file}"        "]==]"   "\n"
-      "      TEST_DL_PATHS"          " [==[" "${_DL_PATHS}"               "]==]"   "\n"
-      "      CTEST_FILE"             " [==[" "${CTEST_FILE}"              "]==]"   "\n"
-      "    )"                                                                      "\n"
-      "  endif()"                                                                  "\n"
-      "  include(\"${ctest_tests_file}\")"                                         "\n"
-      "else()"                                                                     "\n"
-      "  add_test(${TARGET}_NOT_BUILT ${TARGET}_NOT_BUILT)"                        "\n"
-      "endif()"                                                                    "\n"
-    )
+  #   string(CONCAT ctest_include_content
+  #     "if(EXISTS \"$<TARGET_FILE:${TARGET}>\")"                                    "\n"
+  #     "  if(NOT EXISTS \"${ctest_tests_file}\" OR"                                 "\n"
+  #     "     NOT \"${ctest_tests_file}\" IS_NEWER_THAN \"$<TARGET_FILE:${TARGET}>\" OR\n"
+  #     "     NOT \"${ctest_tests_file}\" IS_NEWER_THAN \"\${CMAKE_CURRENT_LIST_FILE}\")\n"
+  #     "    include(\"${_BOOST_DISCOVER_TESTS_SCRIPT}\")"                           "\n"
+  #     "    boost_discover_tests_impl("                                             "\n"
+  #     "      TEST_EXECUTABLE"        " [==[" "$<TARGET_FILE:${TARGET}>"   "]==]"   "\n"
+  #     "      TEST_EXECUTOR"          " [==[" "${crosscompiling_emulator}" "]==]"   "\n"
+  #     "      TEST_WORKING_DIR"       " [==[" "${_WORKING_DIRECTORY}"      "]==]"   "\n"
+  #     "      TEST_SPEC"              " [==[" "${_TEST_SPEC}"              "]==]"   "\n"
+  #     "      TEST_EXTRA_ARGS"        " [==[" "${_EXTRA_ARGS}"             "]==]"   "\n"
+  #     "      TEST_PROPERTIES"        " [==[" "${_PROPERTIES}"             "]==]"   "\n"
+  #     "      TEST_PREFIX"            " [==[" "${_TEST_PREFIX}"            "]==]"   "\n"
+  #     "      TEST_SUFFIX"            " [==[" "${_TEST_SUFFIX}"            "]==]"   "\n"
+  #     "      TEST_LIST"              " [==[" "${_TEST_LIST}"              "]==]"   "\n"
+  #     "      TEST_REPORTER"          " [==[" "${_REPORTER}"               "]==]"   "\n"
+  #     "      TEST_OUTPUT_DIR"        " [==[" "${_OUTPUT_DIR}"             "]==]"   "\n"
+  #     "      TEST_OUTPUT_PREFIX"     " [==[" "${_OUTPUT_PREFIX}"          "]==]"   "\n"
+  #     "      TEST_OUTPUT_SUFFIX"     " [==[" "${_OUTPUT_SUFFIX}"          "]==]"   "\n"
+  #     "      CTEST_FILE"             " [==[" "${ctest_tests_file}"        "]==]"   "\n"
+  #     "      TEST_DL_PATHS"          " [==[" "${_DL_PATHS}"               "]==]"   "\n"
+  #     "      CTEST_FILE"             " [==[" "${CTEST_FILE}"              "]==]"   "\n"
+  #     "    )"                                                                      "\n"
+  #     "  endif()"                                                                  "\n"
+  #     "  include(\"${ctest_tests_file}\")"                                         "\n"
+  #     "else()"                                                                     "\n"
+  #     "  add_test(${TARGET}_NOT_BUILT ${TARGET}_NOT_BUILT)"                        "\n"
+  #     "endif()"                                                                    "\n"
+  #   )
 
-    if(GENERATOR_IS_MULTI_CONFIG)
-      foreach(_config ${CMAKE_CONFIGURATION_TYPES})
-        file(GENERATE OUTPUT "${ctest_file_base}_include-${_config}.cmake" CONTENT "${ctest_include_content}" CONDITION $<CONFIG:${_config}>)
-      endforeach()
-      string(CONCAT ctest_include_multi_content
-        "if(NOT CTEST_CONFIGURATION_TYPE)"                                              "\n"
-        "  message(\"No configuration for testing specified, use '-C <cfg>'.\")"        "\n"
-        "else()"                                                                        "\n"
-        "  include(\"${ctest_file_base}_include-\${CTEST_CONFIGURATION_TYPE}.cmake\")"  "\n"
-        "endif()"                                                                       "\n"
-      )
-      file(GENERATE OUTPUT "${ctest_include_file}" CONTENT "${ctest_include_multi_content}")
-    else()
-      file(GENERATE OUTPUT "${ctest_file_base}_include.cmake" CONTENT "${ctest_include_content}")
-      file(WRITE "${ctest_include_file}" "include(\"${ctest_file_base}_include.cmake\")")
-    endif()
+  #   if(GENERATOR_IS_MULTI_CONFIG)
+  #     foreach(_config ${CMAKE_CONFIGURATION_TYPES})
+  #       file(GENERATE OUTPUT "${ctest_file_base}_include-${_config}.cmake" CONTENT "${ctest_include_content}" CONDITION $<CONFIG:${_config}>)
+  #     endforeach()
+  #     string(CONCAT ctest_include_multi_content
+  #       "if(NOT CTEST_CONFIGURATION_TYPE)"                                              "\n"
+  #       "  message(\"No configuration for testing specified, use '-C <cfg>'.\")"        "\n"
+  #       "else()"                                                                        "\n"
+  #       "  include(\"${ctest_file_base}_include-\${CTEST_CONFIGURATION_TYPE}.cmake\")"  "\n"
+  #       "endif()"                                                                       "\n"
+  #     )
+  #     file(GENERATE OUTPUT "${ctest_include_file}" CONTENT "${ctest_include_multi_content}")
+  #   else()
+  #     file(GENERATE OUTPUT "${ctest_file_base}_include.cmake" CONTENT "${ctest_include_content}")
+  #     file(WRITE "${ctest_include_file}" "include(\"${ctest_file_base}_include.cmake\")")
+  #   endif()
   endif()
 
   if(NOT ${CMAKE_VERSION} VERSION_LESS "3.10.0")
@@ -298,7 +302,7 @@ endfunction()
 
 ###############################################################################
 
-set(_boost_discover_tests_SCRIPT
-  ${CMAKE_CURRENT_LIST_DIR}/CatchAddTests.cmake
-  CACHE INTERNAL "Catch2 full path to CatchAddTests.cmake helper file"
+set(_BOOST_DISCOVER_TESTS_SCRIPT
+  ${CMAKE_CURRENT_LIST_DIR}/BoostAddTests.cmake
+  CACHE INTERNAL "Boost full path to BoostAddTests.cmake helper file"
 )

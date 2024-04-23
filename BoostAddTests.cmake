@@ -3,8 +3,6 @@
 
 cmake_policy(SET CMP0007 NEW)
 
-include(CMakePrintHelpers)
-
 function(add_command NAME)
   set(_args "")
   # use ARGV* instead of ARGN, because ARGN splits arrays into multiple arguments
@@ -154,7 +152,7 @@ function(boost_discover_tests_impl)
 
     # ...and add to script
     add_command(add_test
-      "${prefix}${test}${suffix}"
+      "\"${prefix}${test}${suffix}\""
       ${_TEST_EXECUTOR}
       "${_TEST_EXECUTABLE}"
       "--run_test=${test_name}"
@@ -178,7 +176,6 @@ function(boost_discover_tests_impl)
 
     list(APPEND tests "${prefix}${test}${suffix}")
   endforeach()
-  # cmake_print_variables(_CTEST_FILE script)
 
   # Create a list of all discovered tests, which users may use to e.g. set
   # properties on the tests
@@ -186,42 +183,34 @@ function(boost_discover_tests_impl)
 
   # Write CTest script
   file(WRITE "${_CTEST_FILE}" "${script}")
-  cmake_print_variables(_CTEST_FILE)
 endfunction()
 
+# Remove the trailing '|' appended to certain parameters in boost_discover_tests().
+function(fix_input_parameter parameter)
+  string(LENGTH "${${parameter}}" _length)
+  math(EXPR _length "${_length} - 1")
+  string(SUBSTRING "${${parameter}}" 0 ${_length} ${parameter})
+  set(${parameter} "${${parameter}}" PARENT_SCOPE)
+endfunction()
+
+include(CMakePrintHelpers)
 if(CMAKE_SCRIPT_MODE_FILE)
-  # cmake_print_variables(
-  #   TEST_EXECUTABLE
-  #   TEST_EXECUTOR
-  #   TEST_WORKING_DIR
-  #   TEST_SPEC
-  #   TEST_EXTRA_ARGS
-  #   TEST_PROPERTIES
-  #   TEST_PREFIX
-  #   TEST_SUFFIX
-  #   TEST_LIST
-  #   TEST_REPORTER
-  #   TEST_OUTPUT_DIR
-  #   TEST_OUTPUT_PREFIX
-  #   TEST_OUTPUT_SUFFIX
-  #   TEST_DL_PATHS
-  #   CTEST_FILE
-  # )
+  fix_input_parameter(TEST_PREFIX)
   boost_discover_tests_impl(
     TEST_EXECUTABLE ${TEST_EXECUTABLE}
-    TEST_EXECUTOR ${TEST_EXECUTOR}
-    TEST_WORKING_DIR ${TEST_WORKING_DIR}
-    TEST_SPEC ${TEST_SPEC}
-    TEST_EXTRA_ARGS ${TEST_EXTRA_ARGS}
-    TEST_PROPERTIES ${TEST_PROPERTIES}
-    TEST_PREFIX ${TEST_PREFIX}
-    TEST_SUFFIX ${TEST_SUFFIX}
-    TEST_LIST ${TEST_LIST}
-    TEST_REPORTER ${TEST_REPORTER}
-    TEST_OUTPUT_DIR ${TEST_OUTPUT_DIR}
-    TEST_OUTPUT_PREFIX ${TEST_OUTPUT_PREFIX}
-    TEST_OUTPUT_SUFFIX ${TEST_OUTPUT_SUFFIX}
-    TEST_DL_PATHS ${TEST_DL_PATHS}
+    # TEST_EXECUTOR ${TEST_EXECUTOR}
+    # TEST_WORKING_DIR ${TEST_WORKING_DIR}
+    # TEST_SPEC ${TEST_SPEC}
+    # TEST_EXTRA_ARGS ${TEST_EXTRA_ARGS}
+    # TEST_PROPERTIES ${TEST_PROPERTIES}
+    TEST_PREFIX "${TEST_PREFIX}"
+    # TEST_SUFFIX ${TEST_SUFFIX}
+    # TEST_LIST ${TEST_LIST}
+    # TEST_REPORTER ${TEST_REPORTER}
+    # TEST_OUTPUT_DIR ${TEST_OUTPUT_DIR}
+    # TEST_OUTPUT_PREFIX ${TEST_OUTPUT_PREFIX}
+    # TEST_OUTPUT_SUFFIX ${TEST_OUTPUT_SUFFIX}
+    # TEST_DL_PATHS ${TEST_DL_PATHS}
     CTEST_FILE ${CTEST_FILE}
   )
 endif()

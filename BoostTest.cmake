@@ -140,7 +140,6 @@ same as the Catch name; see also ``TEST_PREFIX`` and ``TEST_SUFFIX``.
 #]=======================================================================]
 
 #------------------------------------------------------------------------------
-include(CMakePrintHelpers)
 function(boost_discover_tests TARGET)
 
   message(STATUS "Adding tests to ${TARGET}")
@@ -152,6 +151,17 @@ function(boost_discover_tests TARGET)
     "TEST_SPEC;EXTRA_ARGS;PROPERTIES;DL_PATHS"
     ${ARGN}
   )
+
+  # TODO Handle each of these, or remove them from the function and documentation.
+  set(unhandled_args
+    TEST_SUFFIX WORKING_DIRECTORY TEST_LIST REPORTER OUTPUT_DIR OUTPUT_PREFIX OUTPUT_SUFFIX DISCOVERY_MODE
+    TEST_SPEC EXTRA_ARGS PROPERTIES DL_PATHS
+  )
+  foreach(param IN LISTS unhandled_args)
+    if(_${param})
+      message(AUTHOR_WARNING "${param} is not supported, yet.")
+    endif()
+  endforeach()
 
   if(NOT _WORKING_DIRECTORY)
     set(_WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
@@ -182,7 +192,6 @@ function(boost_discover_tests TARGET)
   set(ctest_file_base "${CMAKE_CURRENT_BINARY_DIR}/${TARGET}-${args_hash}")
   set(ctest_include_file "${ctest_file_base}_include.cmake")
   set(ctest_tests_file "${ctest_file_base}_tests.cmake")
-  cmake_print_variables(ctest_file_base ctest_include_file ctest_tests_file)
 
   get_property(crosscompiling_emulator
     TARGET ${TARGET}
@@ -190,6 +199,9 @@ function(boost_discover_tests TARGET)
   )
 
   if(_DISCOVERY_MODE STREQUAL "POST_BUILD")
+    # This is tricky. If a function parameter has a trailing space, passing
+    # them to the custom command loses the trailing space. Append a '|' here,
+    # then strip it back out on the other side.
     add_custom_command(
       TARGET ${TARGET} POST_BUILD
       BYPRODUCTS "${ctest_tests_file}"
@@ -201,7 +213,7 @@ function(boost_discover_tests TARGET)
               -D "TEST_SPEC=${_TEST_SPEC}"
               -D "TEST_EXTRA_ARGS=${_EXTRA_ARGS}"
               -D "TEST_PROPERTIES=${_PROPERTIES}"
-              -D "TEST_PREFIX=${_TEST_PREFIX}"
+              -D "TEST_PREFIX=${_TEST_PREFIX}|"
               -D "TEST_SUFFIX=${_TEST_SUFFIX}"
               -D "TEST_LIST=${_TEST_LIST}"
               -D "TEST_REPORTER=${_REPORTER}"

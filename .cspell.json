@@ -1,4 +1,15 @@
 {
   "version": "0.2",
-  "words": ["CTEST", "endforeach"]
+  "words": [
+    "ARGN",
+    "CONCAT",
+    "CROSSCOMPILING",
+    "CTEST",
+    "DYLD",
+    "endforeach",
+    "endfunction",
+    "libgcov",
+    "STREQUAL",
+    "wildcarded"
+  ]
 }

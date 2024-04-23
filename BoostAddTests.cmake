@@ -193,7 +193,6 @@ function(fix_input_parameter parameter)
   set(${parameter} "${${parameter}}" PARENT_SCOPE)
 endfunction()
 
-include(CMakePrintHelpers)
 if(CMAKE_SCRIPT_MODE_FILE)
   fix_input_parameter(TEST_PREFIX)
   boost_discover_tests_impl(
@@ -204,7 +203,7 @@ if(CMAKE_SCRIPT_MODE_FILE)
     # TEST_EXTRA_ARGS ${TEST_EXTRA_ARGS}
     # TEST_PROPERTIES ${TEST_PROPERTIES}
     TEST_PREFIX "${TEST_PREFIX}"
-    # TEST_SUFFIX ${TEST_SUFFIX}
+    TEST_SUFFIX "${TEST_SUFFIX}"
     # TEST_LIST ${TEST_LIST}
     # TEST_REPORTER ${TEST_REPORTER}
     # TEST_OUTPUT_DIR ${TEST_OUTPUT_DIR}

@@ -1,7 +1,15 @@
 {
   "version": "0.2",
   "words": [
+    "ARGN",
+    "CONCAT",
+    "CROSSCOMPILING",
     "CTEST",
-    "endforeach"
+    "DYLD",
+    "endforeach",
+    "endfunction",
+    "libgcov",
+    "STREQUAL",
+    "wildcarded"
   ]
 }

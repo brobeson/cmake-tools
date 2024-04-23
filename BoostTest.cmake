@@ -153,7 +153,7 @@ function(boost_discover_tests TARGET)
   )
 
   # TODO Handle each of these, or remove them from the function and documentation.
-  foreach(param IN ITEMS WORKING_DIRECTORY TEST_LIST REPORTER OUTPUT_DIR OUTPUT_PREFIX OUTPUT_SUFFIX DISCOVERY_MODE TEST_SPEC EXTRA_ARGS PROPERTIES DL_PATHS)
+  foreach(param IN ITEMS TEST_LIST REPORTER OUTPUT_DIR OUTPUT_PREFIX OUTPUT_SUFFIX DISCOVERY_MODE TEST_SPEC EXTRA_ARGS PROPERTIES DL_PATHS)
     if(_${param})
       message(AUTHOR_WARNING "${param} is not supported, yet.")
     endif()

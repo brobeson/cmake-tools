@@ -27,7 +27,7 @@ function(boost_discover_tests_impl)
     "TEST_EXTRA_ARGS;TEST_PROPERTIES;TEST_EXECUTOR;TEST_DL_PATHS"
     ${ARGN}
   )
-  foreach(param IN ITEMS TEST_OUTPUT_DIR TEST_OUTPUT_PREFIX TEST_OUTPUT_SUFFIX TEST_REPORTER TEST_SPEC TEST_PROPERTIES TEST_EXECUTOR TEST_DL_PATHS)
+  foreach(param IN ITEMS TEST_OUTPUT_DIR TEST_OUTPUT_PREFIX TEST_OUTPUT_SUFFIX TEST_REPORTER TEST_SPEC TEST_EXECUTOR TEST_DL_PATHS)
     if(_${param})
       message(AUTHOR_WARNING "${param} is not supported, yet.")
     endif()
@@ -165,7 +165,7 @@ function(boost_discover_tests_impl)
       "${output_dir_arg}"
     )
     add_command(set_tests_properties
-      "${prefix}${test}${suffix}"
+      "\"${prefix}${test}${suffix}\""
       PROPERTIES
       WORKING_DIRECTORY "${_TEST_WORKING_DIR}"
       ${properties}
@@ -205,7 +205,7 @@ if(CMAKE_SCRIPT_MODE_FILE)
     TEST_WORKING_DIR ${TEST_WORKING_DIR}
     # TEST_SPEC ${TEST_SPEC}
     TEST_EXTRA_ARGS ${TEST_EXTRA_ARGS}
-    # TEST_PROPERTIES ${TEST_PROPERTIES}
+    TEST_PROPERTIES ${TEST_PROPERTIES}
     TEST_PREFIX "${TEST_PREFIX}"
     TEST_SUFFIX "${TEST_SUFFIX}"
     TEST_LIST ${TEST_LIST}

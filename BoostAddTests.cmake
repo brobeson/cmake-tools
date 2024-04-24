@@ -20,7 +20,6 @@ function(add_command NAME)
 endfunction()
 
 function(boost_discover_tests_impl)
-  message(STATUS "Discovering tests!")
   cmake_parse_arguments(
     ""
     ""
@@ -28,7 +27,7 @@ function(boost_discover_tests_impl)
     "TEST_EXTRA_ARGS;TEST_PROPERTIES;TEST_EXECUTOR;TEST_DL_PATHS"
     ${ARGN}
   )
-  foreach(param IN ITEMS TEST_OUTPUT_DIR TEST_OUTPUT_PREFIX TEST_OUTPUT_SUFFIX TEST_REPORTER TEST_SPEC TEST_LIST TEST_EXTRA_ARGS TEST_PROPERTIES TEST_EXECUTOR TEST_DL_PATHS)
+  foreach(param IN ITEMS TEST_OUTPUT_DIR TEST_OUTPUT_PREFIX TEST_OUTPUT_SUFFIX TEST_REPORTER TEST_SPEC TEST_EXTRA_ARGS TEST_PROPERTIES TEST_EXECUTOR TEST_DL_PATHS)
     if(_${param})
       message(AUTHOR_WARNING "${param} is not supported, yet.")
     endif()
@@ -179,7 +178,7 @@ function(boost_discover_tests_impl)
     #     ENVIRONMENT_MODIFICATION "${environment_modifications}")
     # endif()
 
-    list(APPEND tests "${prefix}${test}${suffix}")
+    list(APPEND tests "\"${prefix}${test}${suffix}\"")
   endforeach()
 
   # Create a list of all discovered tests, which users may use to e.g. set
@@ -209,7 +208,7 @@ if(CMAKE_SCRIPT_MODE_FILE)
     # TEST_PROPERTIES ${TEST_PROPERTIES}
     TEST_PREFIX "${TEST_PREFIX}"
     TEST_SUFFIX "${TEST_SUFFIX}"
-    # TEST_LIST ${TEST_LIST}
+    TEST_LIST ${TEST_LIST}
     # TEST_REPORTER ${TEST_REPORTER}
     # TEST_OUTPUT_DIR ${TEST_OUTPUT_DIR}
     # TEST_OUTPUT_PREFIX ${TEST_OUTPUT_PREFIX}

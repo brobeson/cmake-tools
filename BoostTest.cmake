@@ -153,7 +153,7 @@ function(boost_discover_tests TARGET)
   )
 
   # TODO Handle each of these, or remove them from the function and documentation.
-  foreach(param IN ITEMS TEST_LIST REPORTER OUTPUT_DIR OUTPUT_PREFIX OUTPUT_SUFFIX DISCOVERY_MODE TEST_SPEC EXTRA_ARGS PROPERTIES DL_PATHS)
+  foreach(param IN ITEMS REPORTER OUTPUT_DIR OUTPUT_PREFIX OUTPUT_SUFFIX DISCOVERY_MODE TEST_SPEC EXTRA_ARGS PROPERTIES DL_PATHS)
     if(_${param})
       message(AUTHOR_WARNING "${param} is not supported, yet.")
     endif()
@@ -220,6 +220,7 @@ function(boost_discover_tests TARGET)
               -D "CTEST_FILE=${ctest_tests_file}"
               -P "${_BOOST_DISCOVER_TESTS_SCRIPT}"
       VERBATIM
+      COMMENT "Discovering tests in ${TARGET}"
     )
 
     file(WRITE "${ctest_include_file}"

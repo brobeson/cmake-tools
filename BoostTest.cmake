@@ -33,7 +33,6 @@ same as the Catch name; see also ``TEST_PREFIX`` and ``TEST_SUFFIX``.
                          [TEST_SUFFIX suffix]
                          [PROPERTIES name1 value1...]
                          [TEST_LIST var]
-                         [REPORTER reporter]
                          [OUTPUT_DIR dir]
                          [OUTPUT_PREFIX prefix]
                          [OUTPUT_SUFFIX suffix]
@@ -95,10 +94,6 @@ same as the Catch name; see also ``TEST_PREFIX`` and ``TEST_SUFFIX``.
     executable is being used in multiple calls to ``boost_discover_tests()``.
     Note that this variable is only available in CTest.
 
-  ``REPORTER reporter``
-    Use the specified reporter when running the test case. The reporter will
-    be passed to the Catch executable as ``--reporter reporter``.
-
   ``OUTPUT_DIR dir``
     If specified, the parameter is passed along as
     ``--out dir/<test_name>`` to Catch executable. The actual file name is the
@@ -147,13 +142,13 @@ function(boost_discover_tests TARGET)
   cmake_parse_arguments(
     ""
     ""
-    "TEST_PREFIX;TEST_SUFFIX;WORKING_DIRECTORY;TEST_LIST;REPORTER;OUTPUT_DIR;OUTPUT_PREFIX;OUTPUT_SUFFIX;DISCOVERY_MODE"
+    "TEST_PREFIX;TEST_SUFFIX;WORKING_DIRECTORY;TEST_LIST;OUTPUT_DIR;OUTPUT_PREFIX;OUTPUT_SUFFIX;DISCOVERY_MODE"
     "TEST_SPEC;EXTRA_ARGS;PROPERTIES;DL_PATHS"
     ${ARGN}
   )
 
   # TODO Handle each of these, or remove them from the function and documentation.
-  foreach(param IN ITEMS REPORTER OUTPUT_DIR OUTPUT_PREFIX OUTPUT_SUFFIX DISCOVERY_MODE TEST_SPEC DL_PATHS)
+  foreach(param IN ITEMS OUTPUT_DIR OUTPUT_PREFIX OUTPUT_SUFFIX DISCOVERY_MODE TEST_SPEC DL_PATHS)
     if(_${param})
       message(AUTHOR_WARNING "${param} is not supported, yet.")
     endif()
@@ -212,7 +207,6 @@ function(boost_discover_tests TARGET)
               -D "TEST_PREFIX=${_TEST_PREFIX}|"
               -D "TEST_SUFFIX=${_TEST_SUFFIX}"
               -D "TEST_LIST=${_TEST_LIST}"
-              -D "TEST_REPORTER=${_REPORTER}"
               -D "TEST_OUTPUT_DIR=${_OUTPUT_DIR}"
               -D "TEST_OUTPUT_PREFIX=${_OUTPUT_PREFIX}"
               -D "TEST_OUTPUT_SUFFIX=${_OUTPUT_SUFFIX}"
@@ -257,7 +251,6 @@ function(boost_discover_tests TARGET)
   #     "      TEST_PREFIX"            " [==[" "${_TEST_PREFIX}"            "]==]"   "\n"
   #     "      TEST_SUFFIX"            " [==[" "${_TEST_SUFFIX}"            "]==]"   "\n"
   #     "      TEST_LIST"              " [==[" "${_TEST_LIST}"              "]==]"   "\n"
-  #     "      TEST_REPORTER"          " [==[" "${_REPORTER}"               "]==]"   "\n"
   #     "      TEST_OUTPUT_DIR"        " [==[" "${_OUTPUT_DIR}"             "]==]"   "\n"
   #     "      TEST_OUTPUT_PREFIX"     " [==[" "${_OUTPUT_PREFIX}"          "]==]"   "\n"
   #     "      TEST_OUTPUT_SUFFIX"     " [==[" "${_OUTPUT_SUFFIX}"          "]==]"   "\n"

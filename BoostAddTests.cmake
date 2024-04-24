@@ -23,11 +23,11 @@ function(boost_discover_tests_impl)
   cmake_parse_arguments(
     ""
     ""
-    "TEST_EXECUTABLE;TEST_WORKING_DIR;TEST_OUTPUT_DIR;TEST_OUTPUT_PREFIX;TEST_OUTPUT_SUFFIX;TEST_PREFIX;TEST_REPORTER;TEST_SPEC;TEST_SUFFIX;TEST_LIST;CTEST_FILE"
+    "TEST_EXECUTABLE;TEST_WORKING_DIR;TEST_OUTPUT_DIR;TEST_OUTPUT_PREFIX;TEST_OUTPUT_SUFFIX;TEST_PREFIX;TEST_SPEC;TEST_SUFFIX;TEST_LIST;CTEST_FILE"
     "TEST_EXTRA_ARGS;TEST_PROPERTIES;TEST_EXECUTOR;TEST_DL_PATHS"
     ${ARGN}
   )
-  foreach(param IN ITEMS TEST_OUTPUT_DIR TEST_OUTPUT_PREFIX TEST_OUTPUT_SUFFIX TEST_REPORTER TEST_SPEC TEST_EXECUTOR TEST_DL_PATHS)
+  foreach(param IN ITEMS TEST_OUTPUT_DIR TEST_OUTPUT_PREFIX TEST_OUTPUT_SUFFIX TEST_SPEC TEST_EXECUTOR TEST_DL_PATHS)
     if(_${param})
       message(AUTHOR_WARNING "${param} is not supported, yet.")
     endif()
@@ -38,7 +38,6 @@ function(boost_discover_tests_impl)
   set(spec ${_TEST_SPEC})
   set(extra_args ${_TEST_EXTRA_ARGS})
   set(properties ${_TEST_PROPERTIES})
-  set(reporter ${_TEST_REPORTER})
   set(output_dir ${_TEST_OUTPUT_DIR})
   set(output_prefix ${_TEST_OUTPUT_PREFIX})
   set(output_suffix ${_TEST_OUTPUT_SUFFIX})
@@ -97,32 +96,6 @@ function(boost_discover_tests_impl)
   list(FILTER output EXCLUDE REGEX "[^\\*]$")
   list(FILTER output EXCLUDE REGEX "^$")
   string(REPLACE "*" "" output "${output}")
-
-  # Prepare reporter
-  # if(reporter)
-  #   set(reporter_arg "--reporter ${reporter}")
-
-  #   # Run test executable to check whether reporter is available
-  #   # note that the use of --list-reporters is not the important part,
-  #   # we only want to check whether the execution succeeds with ${reporter_arg}
-  #   execute_process(
-  #     COMMAND ${_TEST_EXECUTOR} "${_TEST_EXECUTABLE}" ${spec} ${reporter_arg} --list-reporters
-  #     OUTPUT_VARIABLE reporter_check_output
-  #     RESULT_VARIABLE reporter_check_result
-  #     WORKING_DIRECTORY "${_TEST_WORKING_DIR}"
-  #   )
-  #   if(${reporter_check_result} EQUAL 255)
-  #     message(FATAL_ERROR
-  #       "\"${reporter}\" is not a valid reporter!\n"
-  #     )
-  #   elseif(NOT ${reporter_check_result} EQUAL 0)
-  #     message(FATAL_ERROR
-  #       "Error running test executable '${_TEST_EXECUTABLE}':\n"
-  #       "  Result: ${reporter_check_result}\n"
-  #       "  Output: ${reporter_check_output}\n"
-  #     )
-  #   endif()
-  # endif()
 
   # Prepare output dir
   # if(output_dir AND NOT IS_ABSOLUTE ${output_dir})
@@ -209,7 +182,6 @@ if(CMAKE_SCRIPT_MODE_FILE)
     TEST_PREFIX "${TEST_PREFIX}"
     TEST_SUFFIX "${TEST_SUFFIX}"
     TEST_LIST ${TEST_LIST}
-    # TEST_REPORTER ${TEST_REPORTER}
     # TEST_OUTPUT_DIR ${TEST_OUTPUT_DIR}
     # TEST_OUTPUT_PREFIX ${TEST_OUTPUT_PREFIX}
     # TEST_OUTPUT_SUFFIX ${TEST_OUTPUT_SUFFIX}

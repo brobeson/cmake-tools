@@ -23,11 +23,11 @@ function(boost_discover_tests_impl)
   cmake_parse_arguments(
     ""
     ""
-    "TEST_EXECUTABLE;TEST_WORKING_DIR;TEST_OUTPUT_PREFIX;TEST_OUTPUT_SUFFIX;TEST_PREFIX;TEST_SPEC;TEST_SUFFIX;TEST_LIST;CTEST_FILE"
+    "TEST_EXECUTABLE;TEST_WORKING_DIR;TEST_PREFIX;TEST_SPEC;TEST_SUFFIX;TEST_LIST;CTEST_FILE"
     "TEST_EXTRA_ARGS;TEST_PROPERTIES;TEST_EXECUTOR;TEST_DL_PATHS"
     ${ARGN}
   )
-  foreach(param IN ITEMS TEST_OUTPUT_PREFIX TEST_OUTPUT_SUFFIX TEST_SPEC TEST_EXECUTOR TEST_DL_PATHS)
+  foreach(param IN ITEMS TEST_SPEC TEST_EXECUTOR TEST_DL_PATHS)
     if(_${param})
       message(AUTHOR_WARNING "${param} is not supported, yet.")
     endif()
@@ -38,8 +38,6 @@ function(boost_discover_tests_impl)
   set(spec ${_TEST_SPEC})
   set(extra_args ${_TEST_EXTRA_ARGS})
   set(properties ${_TEST_PROPERTIES})
-  set(output_prefix ${_TEST_OUTPUT_PREFIX})
-  set(output_suffix ${_TEST_OUTPUT_SUFFIX})
   set(dl_paths ${_TEST_DL_PATHS})
   set(script)
   set(suite)
@@ -168,8 +166,6 @@ if(CMAKE_SCRIPT_MODE_FILE)
     TEST_PREFIX "${TEST_PREFIX}"
     TEST_SUFFIX "${TEST_SUFFIX}"
     TEST_LIST ${TEST_LIST}
-    # TEST_OUTPUT_PREFIX ${TEST_OUTPUT_PREFIX}
-    # TEST_OUTPUT_SUFFIX ${TEST_OUTPUT_SUFFIX}
     # TEST_DL_PATHS ${TEST_DL_PATHS}
     CTEST_FILE ${CTEST_FILE}
   )

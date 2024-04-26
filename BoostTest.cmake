@@ -33,7 +33,6 @@ same as the Catch name; see also ``TEST_PREFIX`` and ``TEST_SUFFIX``.
                          [TEST_SUFFIX suffix]
                          [PROPERTIES name1 value1...]
                          [TEST_LIST var]
-                         [OUTPUT_DIR dir]
                          [OUTPUT_PREFIX prefix]
                          [OUTPUT_SUFFIX suffix]
                          [DISCOVERY_MODE <POST_BUILD|PRE_TEST>]
@@ -94,13 +93,6 @@ same as the Catch name; see also ``TEST_PREFIX`` and ``TEST_SUFFIX``.
     executable is being used in multiple calls to ``boost_discover_tests()``.
     Note that this variable is only available in CTest.
 
-  ``OUTPUT_DIR dir``
-    If specified, the parameter is passed along as
-    ``--out dir/<test_name>`` to Catch executable. The actual file name is the
-    same as the test name. This should be used instead of
-    ``EXTRA_ARGS --out foo`` to avoid race conditions writing the result output
-    when using parallel test execution.
-
   ``OUTPUT_PREFIX prefix``
     May be used in conjunction with ``OUTPUT_DIR``.
     If specified, ``prefix`` is added to each output file name, like so
@@ -136,19 +128,16 @@ same as the Catch name; see also ``TEST_PREFIX`` and ``TEST_SUFFIX``.
 
 #------------------------------------------------------------------------------
 function(boost_discover_tests TARGET)
-
-  message(STATUS "Adding tests to ${TARGET}")
-  list(APPEND CMAKE_MESSAGE_INDENT "  ")
   cmake_parse_arguments(
     ""
     ""
-    "TEST_PREFIX;TEST_SUFFIX;WORKING_DIRECTORY;TEST_LIST;OUTPUT_DIR;OUTPUT_PREFIX;OUTPUT_SUFFIX;DISCOVERY_MODE"
+    "TEST_PREFIX;TEST_SUFFIX;WORKING_DIRECTORY;TEST_LIST;OUTPUT_PREFIX;OUTPUT_SUFFIX;DISCOVERY_MODE"
     "TEST_SPEC;EXTRA_ARGS;PROPERTIES;DL_PATHS"
     ${ARGN}
   )
 
   # TODO Handle each of these, or remove them from the function and documentation.
-  foreach(param IN ITEMS OUTPUT_DIR OUTPUT_PREFIX OUTPUT_SUFFIX DISCOVERY_MODE TEST_SPEC DL_PATHS)
+  foreach(param IN ITEMS OUTPUT_PREFIX OUTPUT_SUFFIX DISCOVERY_MODE TEST_SPEC DL_PATHS)
     if(_${param})
       message(AUTHOR_WARNING "${param} is not supported, yet.")
     endif()
@@ -207,7 +196,6 @@ function(boost_discover_tests TARGET)
               -D "TEST_PREFIX=${_TEST_PREFIX}|"
               -D "TEST_SUFFIX=${_TEST_SUFFIX}"
               -D "TEST_LIST=${_TEST_LIST}"
-              -D "TEST_OUTPUT_DIR=${_OUTPUT_DIR}"
               -D "TEST_OUTPUT_PREFIX=${_OUTPUT_PREFIX}"
               -D "TEST_OUTPUT_SUFFIX=${_OUTPUT_SUFFIX}"
               -D "TEST_DL_PATHS=${_DL_PATHS}"
@@ -251,7 +239,6 @@ function(boost_discover_tests TARGET)
   #     "      TEST_PREFIX"            " [==[" "${_TEST_PREFIX}"            "]==]"   "\n"
   #     "      TEST_SUFFIX"            " [==[" "${_TEST_SUFFIX}"            "]==]"   "\n"
   #     "      TEST_LIST"              " [==[" "${_TEST_LIST}"              "]==]"   "\n"
-  #     "      TEST_OUTPUT_DIR"        " [==[" "${_OUTPUT_DIR}"             "]==]"   "\n"
   #     "      TEST_OUTPUT_PREFIX"     " [==[" "${_OUTPUT_PREFIX}"          "]==]"   "\n"
   #     "      TEST_OUTPUT_SUFFIX"     " [==[" "${_OUTPUT_SUFFIX}"          "]==]"   "\n"
   #     "      CTEST_FILE"             " [==[" "${ctest_tests_file}"        "]==]"   "\n"

@@ -23,11 +23,11 @@ function(boost_discover_tests_impl)
   cmake_parse_arguments(
     ""
     ""
-    "TEST_EXECUTABLE;TEST_WORKING_DIR;TEST_OUTPUT_DIR;TEST_OUTPUT_PREFIX;TEST_OUTPUT_SUFFIX;TEST_PREFIX;TEST_SPEC;TEST_SUFFIX;TEST_LIST;CTEST_FILE"
+    "TEST_EXECUTABLE;TEST_WORKING_DIR;TEST_OUTPUT_PREFIX;TEST_OUTPUT_SUFFIX;TEST_PREFIX;TEST_SPEC;TEST_SUFFIX;TEST_LIST;CTEST_FILE"
     "TEST_EXTRA_ARGS;TEST_PROPERTIES;TEST_EXECUTOR;TEST_DL_PATHS"
     ${ARGN}
   )
-  foreach(param IN ITEMS TEST_OUTPUT_DIR TEST_OUTPUT_PREFIX TEST_OUTPUT_SUFFIX TEST_SPEC TEST_EXECUTOR TEST_DL_PATHS)
+  foreach(param IN ITEMS TEST_OUTPUT_PREFIX TEST_OUTPUT_SUFFIX TEST_SPEC TEST_EXECUTOR TEST_DL_PATHS)
     if(_${param})
       message(AUTHOR_WARNING "${param} is not supported, yet.")
     endif()
@@ -38,7 +38,6 @@ function(boost_discover_tests_impl)
   set(spec ${_TEST_SPEC})
   set(extra_args ${_TEST_EXTRA_ARGS})
   set(properties ${_TEST_PROPERTIES})
-  set(output_dir ${_TEST_OUTPUT_DIR})
   set(output_prefix ${_TEST_OUTPUT_PREFIX})
   set(output_suffix ${_TEST_OUTPUT_SUFFIX})
   set(dl_paths ${_TEST_DL_PATHS})
@@ -97,14 +96,6 @@ function(boost_discover_tests_impl)
   list(FILTER output EXCLUDE REGEX "^$")
   string(REPLACE "*" "" output "${output}")
 
-  # Prepare output dir
-  # if(output_dir AND NOT IS_ABSOLUTE ${output_dir})
-  #   set(output_dir "${_TEST_WORKING_DIR}/${output_dir}")
-  #   if(NOT EXISTS ${output_dir})
-  #     file(MAKE_DIRECTORY ${output_dir})
-  #   endif()
-  # endif()
-
   # if(dl_paths)
   #   foreach(path ${dl_paths})
   #     cmake_path(NATIVE_PATH path native_path)
@@ -122,10 +113,6 @@ function(boost_discover_tests_impl)
     #   string(REPLACE ${char} "\\${char}" test_name "${test_name}")
     # endforeach(char)
     # ...add output dir
-    # if(output_dir)
-    #   string(REGEX REPLACE "[^A-Za-z0-9_]" "_" test_name_clean "${test_name}")
-    #   set(output_dir_arg "--out ${output_dir}/${output_prefix}${test_name_clean}${output_suffix}")
-    # endif()
 
     # ...and add to script
     add_command(add_test
@@ -135,7 +122,6 @@ function(boost_discover_tests_impl)
       "--run_test=${test_name}"
       ${extra_args}
       "${reporter_arg}"
-      "${output_dir_arg}"
     )
     add_command(set_tests_properties
       "\"${prefix}${test}${suffix}\""
@@ -182,7 +168,6 @@ if(CMAKE_SCRIPT_MODE_FILE)
     TEST_PREFIX "${TEST_PREFIX}"
     TEST_SUFFIX "${TEST_SUFFIX}"
     TEST_LIST ${TEST_LIST}
-    # TEST_OUTPUT_DIR ${TEST_OUTPUT_DIR}
     # TEST_OUTPUT_PREFIX ${TEST_OUTPUT_PREFIX}
     # TEST_OUTPUT_SUFFIX ${TEST_OUTPUT_SUFFIX}
     # TEST_DL_PATHS ${TEST_DL_PATHS}

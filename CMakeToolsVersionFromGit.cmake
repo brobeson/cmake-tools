@@ -28,12 +28,12 @@ The module defines these variables:
   .. variable:: CMAKE_TOOLS_GIT_TAG_MINOR
 
     An integer for the minor component of the project version.
-    If this componenet is not in the Git tag, this variable is set to an empty string.
+    If this component is not in the Git tag, this variable is set to an empty string.
 
   .. variable:: CMAKE_TOOLS_GIT_TAG_PATCH
 
     An integer for the patch component of the project version.
-    If this componenet is not in the Git tag, this variable is set to an empty string.
+    If this component is not in the Git tag, this variable is set to an empty string.
 
   .. variable:: CMAKE_TOOLS_GIT_DISTANCE
 
@@ -57,7 +57,7 @@ Then use the appropriate variables where you would define a project version.
   # Using the distance as the project version's tweak component:
   project(MyProject VERSION ${CMAKE_TOOLS_GIT_TAG}.${CMAKE_TOOLS_GIT_DISTANCE})
 
-This module locates Git via ``find_package(Git)``; see the `FindGit documentaiton <https://cmake.org/cmake/help/latest/module/FindGit.html>`_ for details.
+This module locates Git via ``find_package(Git)``; see the `FindGit documentation <https://cmake.org/cmake/help/latest/module/FindGit.html>`_ for details.
 If this module does not find Git, it issues a warning, leaves the above variables undefined, and allows CMake to continue.
 
 #]=]
@@ -87,7 +87,7 @@ if(NOT git_result STREQUAL "0")
   set(CMAKE_TOOLS_GIT_TAG_PATCH 0)
   set(CMAKE_TOOLS_GIT_DISTANCE 0)
 else()
-  # First, remove any nondigit prefix from the output.
+  # First, remove any non-digit prefix from the output.
   string(REGEX REPLACE "^[^0-9]+" "" git_output "${git_output}")
 
   # Next, extract the tag's version data and remove it from the output.

@@ -1,0 +1,15 @@
+# Adapted from https://stackoverflow.com/a/70715829
+
+# Ignore everything
+*
+
+# Include files by extension
+!*.json
+!*.md
+!*.yaml
+!*.yml
+!*.rst
+
+# Check subdirectories
+!*/
+

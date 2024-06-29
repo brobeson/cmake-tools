@@ -1,0 +1,19 @@
+{
+  "version": "0.2",
+  "words": [
+    "brobeson",
+    "builddir",
+    "errorlevel",
+    "fetchcontent",
+    "moderncmakedomain",
+    "popd",
+    "pushd",
+    "quickstart",
+    "sphinxbuild",
+    "sphinxcontrib",
+    "sphinxopts",
+    "strequal",
+    "sourcedir",
+    "toctree"
+  ]
+}

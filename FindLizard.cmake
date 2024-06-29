@@ -60,7 +60,7 @@ Functions
       ALL
       ARGUMENTS
         --CCN 10
-        --lenght 50
+        --length 50
         --warnings_only
     )
 
@@ -104,7 +104,7 @@ function(add_lizard_target name)
     "ALL"
     ""
     ARGUMENTS
-    ${ARGN}
+    ${ARGN}  # cspell:disable-line
   )
   if(lizard_ALL)
     set(ALL "ALL")
@@ -116,4 +116,4 @@ function(add_lizard_target name)
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     COMMENT "Running cyclomatic complexity analysis in ${CMAKE_CURRENT_SOURCE_DIR}."
   )
-endfunction()
+endfunction()  # cspell:disable-line

@@ -11,6 +11,7 @@ To get started with cmake-tools, [read the documentation](https://cmake-tools.re
 1. [Getting Started](https://cmake-tools.readthedocs.io/en/latest/getting_started.html)
 1. [Module Reference](https://cmake-tools.readthedocs.io/en/latest/index.html#module-reference)
 
+<!-- prettier-ignore -->
 | Module | Description |
 |:---|:---|
 | [CMakeToolsCompileOptions](https://cmake-tools.readthedocs.io/en/latest/cmake_tools_compile_options.html) | Get a set of strict C++ compiler warnings. |

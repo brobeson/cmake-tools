@@ -136,6 +136,13 @@ Here are examples for some use cases.
 
 #]=]
 
+# cspell:words asan fdiagnostics fsanitize fstack gcov ggdb msvc nondigit tsan
+# cspell:words ubsan vtables Walloca Wcast Wconversion Wdate Wduplicated Werror
+# cspell:words Weverything Wextra Wfloat Wformat Winvalid Wlogical Wmissing
+# cspell:words Wnoexcept Wnon Woverloaded Wpedantic Wplacement Wredundant
+# cspell:words Wregister Wshadow Wsign Wstack Wsubobject Wswitch Wtrampolines
+# cspell:words Wundef Wunused Wuseless Wzero
+
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   list(
     APPEND CMAKE_TOOLS_COMPILE_OPTIONS
@@ -187,7 +194,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         -Wcast-align=strict
         -Wextra-semi
     )
-  # elseif(CMAKE_CXX_COMPILER_VERSION VERSIN_GREATER_EQUAL 9.0)
+  # elseif(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 9.0)
   #   set(_issue_dev_warning_about_version true)
   endif()
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

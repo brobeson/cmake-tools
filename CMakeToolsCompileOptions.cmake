@@ -136,6 +136,13 @@ Here are examples for some use cases.
 
 #]=]
 
+# cspell:words asan fdiagnostics fsanitize fstack gcov ggdb msvc nondigit tsan
+# cspell:words ubsan vtables Walloca Wcast Wconversion Wdate Wduplicated Werror
+# cspell:words Weverything Wextra Wfloat Wformat Winvalid Wlogical Wmissing
+# cspell:words Wnoexcept Wnon Woverloaded Wpedantic Wplacement Wredundant
+# cspell:words Wregister Wshadow Wsign Wstack Wsubobject Wswitch Wtrampolines
+# cspell:words Wundef Wunused Wuseless Wzero
+
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   list(
     APPEND CMAKE_TOOLS_COMPILE_OPTIONS

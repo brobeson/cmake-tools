@@ -186,9 +186,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     "$<$<CONFIG:Debug>:-Wstack-protector>"
     "$<$<CONFIG:Debug>:-ggdb>"
   )
-  # CMake added VERSION_GREATER_EQUAL in CMake 7. To allow consumers to use
-  # earlier versions of CMake, I don't use it here.
-  if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 8.0 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 8.0)
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 8.0)
     list(
       APPEND
         CMAKE_TOOLS_COMPILE_OPTIONS
@@ -196,7 +194,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         -Wcast-align=strict
         -Wextra-semi
     )
-  # elseif(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 9.0 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 9.0)
+  # elseif(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 9.0)
   #   set(_issue_dev_warning_about_version true)
   endif()
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

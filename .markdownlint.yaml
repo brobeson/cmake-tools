@@ -1,0 +1,3 @@
+line-length: false # Let Prettier handle it.
+blanks-around-fences:
+  list_items: false

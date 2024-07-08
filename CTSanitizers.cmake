@@ -161,9 +161,9 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL GNU OR CMAKE_C_COMPILER_ID STREQUAL GNU)
 #    message(WARNING "CT Sanitizers does not support Clang version ${CMAKE_CXX_COMPILER_VERSION}.")
 #    return()
 #  endif()
-#else()
-#  message(WARNING "CT Sanitizers does not support ${CMAKE_CXX_COMPILER_ID}.")
-#  return()
+else()
+  message(WARNING "CT Sanitizers does not support ${CMAKE_CXX_COMPILER_ID}.")
+  return()
 endif()
 
 # Make sure the libraries are available on the system.
@@ -212,7 +212,7 @@ target_sources(
   PRIVATE
     "$<$<CONFIG:asan>:${CMAKE_CURRENT_LIST_DIR}/ct_asan_test.cpp>"
 )
-add_test(NAME ct_sanitizer_test COMMAND ct_sanitizer_test)
+add_test(NAME "Confirm ASan is working" COMMAND ct_sanitizer_test)
 set_tests_properties(
   ct_sanitizer_test
   PROPERTIES

@@ -150,10 +150,10 @@ snippet you can copy into your *settings.json* file.
 #]=]
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL GNU OR CMAKE_C_COMPILER_ID STREQUAL GNU)
- if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "13.0.0" OR CMAKE_C_COMPILER_VERSION VERSION_LESS "13.0.0")
-   message(WARNING "CT Sanitizers does not support GCC version ${CMAKE_CXX_COMPILER_VERSION}.")
-   return()
- endif()
+	# if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "13.0.0" OR CMAKE_C_COMPILER_VERSION VERSION_LESS "13.0.0")
+	# message(WARNING "CT Sanitizers does not support GCC version ${CMAKE_CXX_COMPILER_VERSION}.")
+	# return()
+	# endif()
  string(REGEX MATCH "[0-9]+" _major_version "${CMAKE_CXX_COMPILER_VERSION}")
  set(_library_hints "/usr/lib/gcc/x86_64-linux-gnu/${_major_version}/")
 #elseif(CMAKE_CXX_COMPILER_ID STREQUAL Clang)

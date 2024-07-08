@@ -214,7 +214,7 @@ target_sources(
 )
 add_test(NAME "Confirm ASan is working" COMMAND ct_sanitizer_test)
 set_tests_properties(
-  ct_sanitizer_test
+  "Confirm ASan is working"
   PROPERTIES
     PASS_REGULAR_EXPRESSION
       "$<$<CONFIG:asan>:AddressSanitizer: heap-use-after-free>"

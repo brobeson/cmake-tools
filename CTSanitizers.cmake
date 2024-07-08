@@ -149,82 +149,56 @@ snippet you can copy into your *settings.json* file.
 
 #]=]
 
-# If the consumer uses an unsupported compiler & version, give them a warning
-# and bail out.
-if(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
-  if(NOT CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL "12.2.0")
-    message(WARNING "CT Sanitizers does not support GCC version ${CMAKE_CXX_COMPILER_VERSION}.")
-    return()
-  endif()
-  string(REGEX MATCH "[0-9]+" _major_version "${CMAKE_CXX_COMPILER_VERSION}")
-  set(_library_hints "/usr/lib/gcc/x86_64-linux-gnu/${_major_version}/")
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
-  if(NOT CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL "14.0.6")
-    message(WARNING "CT Sanitizers does not support Clang version ${CMAKE_CXX_COMPILER_VERSION}.")
-    return()
-  endif()
-else()
-  message(WARNING "CT Sanitizers does not support ${CMAKE_CXX_COMPILER_ID}.")
-  return()
+if(CMAKE_CXX_COMPILER_ID STREQUAL GNU OR CMAKE_C_COMPILER_ID STREQUAL GNU)
+ if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "13.0.0" OR CMAKE_C_COMPILER_VERSION VERSION_LESS "13.0.0")
+   message(WARNING "CT Sanitizers does not support GCC version ${CMAKE_CXX_COMPILER_VERSION}.")
+   return()
+ endif()
+ string(REGEX MATCH "[0-9]+" _major_version "${CMAKE_CXX_COMPILER_VERSION}")
+ set(_library_hints "/usr/lib/gcc/x86_64-linux-gnu/${_major_version}/")
+#elseif(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
+#  if(NOT CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL "14.0.6")
+#    message(WARNING "CT Sanitizers does not support Clang version ${CMAKE_CXX_COMPILER_VERSION}.")
+#    return()
+#  endif()
+#else()
+#  message(WARNING "CT Sanitizers does not support ${CMAKE_CXX_COMPILER_ID}.")
+#  return()
 endif()
 
 # Make sure the libraries are available on the system.
-set(_allowed_sanitizers ASan MSan TSan UBSan)
-# find_library(_asan_library NAMES asan DOC "The path to the address sanitizer library." HINTS "${_library_hints}")
-# if(_asan_library)
-#   list(APPEND _allowed_sanitizers ASan)
-# else()
-#   message(WARNING "Cannot find libasan. Skipping ASan build configuation.")
-# endif()
-# find_library(_tsan_library NAMES tsan DOC "The path to the thread sanitizer library." HINTS "${_library_hints}")
-# if(_tsan_library)
-#   list(APPEND _allowed_sanitizers TSan)
-# else()
-#   message(WARNING "Cannot find libtsan. Skipping TSan build configuation.")
-# endif()
-# find_library(_ubsan_library NAMES ubsan DOC "The path to the undefined behavior sanitizer library." HINTS "${_library_hints}")
-# if(_ubsan_library)
-#   list(APPEND _allowed_sanitizers UBSan)
-# else()
-#   message(WARNING "Cannot find libubsan. Skipping UBSan build configuation.")
-# endif()
-# find_library(_msan_library NAMES m DOC "The path to the memory sanitizer library." HINTS "${_library_hints}")
-# if(_msan_library)
-#   list(APPEND _allowed_sanitizers MSan)
-# else()
-#   message(WARNING "Cannot find libm. Skipping MSan build configuration.")
-# endif()
+# set(_allowed_sanitizers ASan)
+find_library(_asan_library NAMES asan DOC "The path to the address sanitizer library." HINTS "${_library_hints}")
+if(_asan_library)
+  list(APPEND _allowed_sanitizers ASan)
+else()
+  message(WARNING "Cannot find libasan. Skipping ASan build configuation.")
+endif()
 
 # Add the sanitizers to the lists of allowed build types and build
-# configurations. I adapted sample code in Professional CMake, Chapter 14, into
+# configurations. I adapted sample code from Professional CMake, Chapter 14, into
 # this.
 get_property(isMultiConfig GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 if(isMultiConfig)
-  foreach(sanitizer IN LISTS _allowed_sanitizers)
-    if(NOT "${sanitizer}" IN_LIST CMAKE_CONFIGURATION_TYPES)
-      list(APPEND CMAKE_CONFIGURATION_TYPES "${sanitizer}")
-    endif()
-  endforeach()
+  list(APPEND CMAKE_CONFIGURATION_TYPES "${_allowed_sanitizers}")
+  list(REMOVE_DUPLICATES CMAKE_CONFIGURATION_TYPES)
 else()
-  set(allowedBuildTypes Debug Release ${_allowed_sanitizers})
+  get_property(allowedBuildTypes CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS)
+  list(APPEND allowedBuildTypes "${_allowed_sanitizers}")
+  list(REMOVE_DUPLICATES allowedBuildTypes)
+  # set(allowedBuildTypes Debug Release ${_allowed_sanitizers})
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "${allowedBuildTypes}")
-  if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Debug CACHE STRING "" FORCE)
-  elseif(NOT CMAKE_BUILD_TYPE IN_LIST allowedBuildTypes)
-    message(FATAL_ERROR "Unknown build type: ${CMAKE_BUILD_TYPE}")
-  endif()
+  # if(NOT CMAKE_BUILD_TYPE)
+  #   set(CMAKE_BUILD_TYPE Debug CACHE STRING "" FORCE)
+  # elseif(NOT CMAKE_BUILD_TYPE IN_LIST allowedBuildTypes)
+  #   message(FATAL_ERROR "Unknown build type: ${CMAKE_BUILD_TYPE}")
+  # endif()
 endif()
 
 # Set the required compiler flags for each sanitizer build type. The compiler
 # will handle linkg-time configuration.
 set(CMAKE_C_FLAGS_ASAN "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address -fno-omit-frame-pointer")
 set(CMAKE_CXX_FLAGS_ASAN "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address -fno-omit-frame-pointer")
-set(CMAKE_C_FLAGS_MSAN "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=memory -fno-omit-frame-pointer")
-set(CMAKE_CXX_FLAGS_MSAN "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=memory -fno-omit-frame-pointer")
-set(CMAKE_C_FLAGS_TSAN "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=thread -fPIE")# -pie")
-set(CMAKE_CXX_FLAGS_TSAN "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=thread -fPIE")# -pie")
-set(CMAKE_C_FLAGS_UBSAN "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=undefined")
-set(CMAKE_CXX_FLAGS_UBSAN "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=undefined")
 
 # Add a test to ensure the sanitizer is configured properly. To correctly handle
 # single- and multi-config generators, use generator expressions to build the
@@ -232,23 +206,17 @@ set(CMAKE_CXX_FLAGS_UBSAN "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=undefined")
 #
 # NOTE: The test is added to the consumer's build system. It's not a test for
 # CMake Tools' software factory.
-include(CTest)
-if(BUILD_TESTING)
-  add_executable(ct_sanitizer_test)
-  target_sources(
-    ct_sanitizer_test
-    PRIVATE
-      "$<$<CONFIG:asan>:${CMAKE_CURRENT_LIST_DIR}/ct_asan_test.cpp>"
-      "$<$<CONFIG:msan>:${CMAKE_CURRENT_LIST_DIR}/ct_msan_test.cpp>"
-      "$<$<CONFIG:tsan>:${CMAKE_CURRENT_LIST_DIR}/ct_tsan_test.cpp>"
-      "$<$<CONFIG:ubsan>:${CMAKE_CURRENT_LIST_DIR}/ct_ubsan_test.cpp>"
-      "$<$<NOT:$<CONFIG:asan,msan,tsan,ubsan>>:${CMAKE_CURRENT_LIST_DIR}/ct_nosan_test.cpp>"
-  )
-  add_test(NAME ct_sanitizer_test COMMAND ct_sanitizer_test)
-  set_tests_properties(
-    ct_sanitizer_test
-    PROPERTIES
-      PASS_REGULAR_EXPRESSION
-        "$<$<CONFIG:asan>:AddressSanitizer: heap-use-after-free>$<$<CONFIG:msan>:MemorySanitizer: use-of-uninitialized-value>$<$<CONFIG:tsan>:ThreadSanitizer: data race>$<$<CONFIG:ubsan>:runtime error: signed integer overflow>"
-  )
-endif()
+add_executable(ct_sanitizer_test)
+target_sources(
+  ct_sanitizer_test
+  PRIVATE
+    "$<$<CONFIG:asan>:${CMAKE_CURRENT_LIST_DIR}/ct_asan_test.cpp>"
+)
+add_test(NAME ct_sanitizer_test COMMAND ct_sanitizer_test)
+set_tests_properties(
+  ct_sanitizer_test
+  PROPERTIES
+    PASS_REGULAR_EXPRESSION
+      "$<$<CONFIG:asan>:AddressSanitizer: heap-use-after-free>"
+)
+

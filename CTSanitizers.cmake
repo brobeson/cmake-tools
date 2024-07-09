@@ -211,10 +211,11 @@ target_sources(
   ct_sanitizer_test
   PRIVATE
     "$<$<CONFIG:asan>:${CMAKE_CURRENT_LIST_DIR}/ct_asan_test.cpp>"
+    "$<$<NOT:$<CONFIG:asan,msan,tsan,ubsan>>:${CMAKE_CURRENT_LIST_DIR}/ct_nosan_test.cpp>"
 )
-add_test(NAME "Confirm ASan is working" COMMAND ct_sanitizer_test)
+add_test(NAME "Confirm sanitizer is working" COMMAND ct_sanitizer_test)
 set_tests_properties(
-  "Confirm ASan is working"
+  "Confirm sanitizer is working"
   PROPERTIES
     PASS_REGULAR_EXPRESSION
       "$<$<CONFIG:asan>:AddressSanitizer: heap-use-after-free>"

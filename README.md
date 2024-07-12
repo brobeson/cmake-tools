@@ -6,6 +6,7 @@ These modules encapsulate CMake code that I often reuse in multiple projects.
 
 [![Static Analysis](https://github.com/brobeson/cmake-tools/actions/workflows/static_analysis.yaml/badge.svg)](https://github.com/brobeson/cmake-tools/actions/workflows/static_analysis.yaml)
 [![Documentation Status](https://readthedocs.org/projects/cmake-tools/badge/?version=latest)](https://cmake-tools.readthedocs.io/en/latest/?badge=latest)
+[![GitHub Release](https://img.shields.io/github/v/release/brobeson/cmake-tools?sort=semver&logo=github&label=Release)](https://github.com/brobeson/cmake-tools/releases/latest)
 
 To get started with cmake-tools, [read the documentation](https://cmake-tools.readthedocs.io/en/latest/).
 

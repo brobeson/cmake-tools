@@ -1,0 +1,14 @@
+name: Release
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: The new version.
+        required: true
+        type: string
+jobs:
+  release:
+    name: New Release
+    uses: brobeson/ActionRelease/.github/workflows/release.yaml@v1
+    with:
+      version: ${{inputs.version}}

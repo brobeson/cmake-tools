@@ -20,6 +20,10 @@ function(add_command NAME)
 endfunction()
 
 function(boost_discover_tests_impl)
+  cmake_print_variables(test_name)
+endfunction()
+
+function(boost_discover_tests_root)
   cmake_parse_arguments(
     ""
     ""
@@ -65,13 +69,13 @@ function(boost_discover_tests_impl)
 
   execute_process(
     # TODO Handle cross compiling and _TEST_EXECUTOR.
-    # TODO Handle the test spec.
     # COMMAND ${_TEST_EXECUTOR} "${_TEST_EXECUTABLE}" ${spec} --list-tests --verbosity quiet
     COMMAND "${_TEST_EXECUTABLE}" --list_content
     # OUTPUT_VARIABLE output
     ERROR_VARIABLE output  # Boost test prints the tree to stderr
     RESULT_VARIABLE result
     WORKING_DIRECTORY "${_TEST_WORKING_DIR}"
+    ERROR_STRIP_TRAILING_WHITESPACE
   )
   if(NOT ${result} EQUAL 0)
     message(FATAL_ERROR
@@ -81,6 +85,9 @@ function(boost_discover_tests_impl)
     )
   endif()
 
+  include(CMakePrintHelpers)
+  cmake_print_variables(output)
+
   # BUG This will exclude disabled tests. Boost Test outputs the list of tests
   # on standard error, which can include other output. For example, I've seen
   # the output with libgcov errors at the end: "libgcov profiling error:"
@@ -89,10 +96,14 @@ function(boost_discover_tests_impl)
   # Also, I need to figure out how to handle nested test suites. This code
   # removes test cases by removing anything with a leading space.
   string(REPLACE "\n" ";" output "${output}")
-  list(FILTER output EXCLUDE REGEX "^ ")
-  list(FILTER output EXCLUDE REGEX "[^\\*]$")
-  list(FILTER output EXCLUDE REGEX "^$")
+  # cmake_print_variables(output)
+  list(FILTER output INCLUDE REGEX "^.+\\*$")
+  # list(FILTER output EXCLUDE REGEX "^ ")
+  # list(FILTER output EXCLUDE REGEX "[^\\*]$")
+  # list(FILTER output EXCLUDE REGEX "^$")
   string(REPLACE "*" "" output "${output}")
+
+  cmake_print_variables(output)
 
   # if(dl_paths)
   #   foreach(path ${dl_paths})
@@ -111,6 +122,9 @@ function(boost_discover_tests_impl)
     #   string(REPLACE ${char} "\\${char}" test_name "${test_name}")
     # endforeach(char)
     # ...add output dir
+
+    boost_discover_tests_impl()
+    # cmake_print_variables(test_name)
 
     # ...and add to script
     add_command(add_test
@@ -156,7 +170,7 @@ endfunction()
 
 if(CMAKE_SCRIPT_MODE_FILE)
   fix_input_parameter(TEST_PREFIX)
-  boost_discover_tests_impl(
+  boost_discover_tests_root(
     TEST_EXECUTABLE ${TEST_EXECUTABLE}
     # TEST_EXECUTOR ${TEST_EXECUTOR}
     TEST_WORKING_DIR ${TEST_WORKING_DIR}

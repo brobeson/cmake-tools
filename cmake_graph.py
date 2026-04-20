@@ -3,6 +3,7 @@
 # cspell: ignore brobeson codemodel
 # pylint: disable=missing-function-docstring
 
+import argparse
 import glob
 import json
 import os.path
@@ -14,16 +15,25 @@ from typing import Optional
 
 
 def main() -> int:
-    build_dir = find_existing_build_dir()
+    arguments = parse_command_line()
+    build_dir = arguments.p if arguments.p is not None else find_existing_build_dir()
     if build_dir is None:
         sys.exit("No build directory found")
     print(f"Found build directory {build_dir}")
-    write_query_file(build_dir)
-    # run_cmake(build_dir)
+    if not arguments.no_config:
+        write_query_file(build_dir)
+        run_cmake(build_dir)
     index = read_reply_index(build_dir)
     reply = read_code_model(build_dir, get_code_model_file(index))
-    pprint(reply)
     return 0
+
+
+def parse_command_line() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--no-config", action="store_true")
+    parser.add_argument("-p")
+    arguments = parser.parse_args()
+    return arguments
 
 
 def find_existing_build_dir() -> Optional[str]:

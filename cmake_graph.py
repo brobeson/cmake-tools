@@ -25,6 +25,8 @@ def main() -> int:
         run_cmake(build_dir)
     index = read_reply_index(build_dir)
     reply = read_code_model(build_dir, get_code_model_file(index))
+    targets = get_targets(reply)
+    write_targets(targets)
     return 0
 
 
@@ -88,6 +90,21 @@ def read_code_model(build_dir: str, file_path: str) -> dict:
     with open(reply_file_path, mode="r", encoding="utf-8") as reply_file:
         reply = json.load(reply_file)
     return reply
+
+
+def get_targets(code_model: dict) -> list:
+    targets: list = code_model["configurations"][0]["targets"]
+    targets.extend(code_model["configurations"][0]["abstractTargets"])
+    targets = list(filter(lambda t: t["name"] != "Git::Git", targets))
+    return targets
+
+
+def write_targets(targets: list) -> None:
+    with open("targets.puml", encoding="utf-8", mode="w") as puml_file:
+        puml_file.write("@startuml\n\n")
+        for target in targets:
+            puml_file.write(f"[{target['name']}]\n")
+        puml_file.write("@enduml")
 
 
 if __name__ == "__main__":

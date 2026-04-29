@@ -2,8 +2,8 @@
 
 from dataclasses import dataclass
 import json
+from enum import StrEnum
 
-# from enum import StrEnum
 # from typing import List, Optional
 
 
@@ -14,14 +14,18 @@ import json
 #     minor: int
 
 
-# class TargetType(StrEnum):
-#     EXECUTABLE = "EXECUTABLE"
-#     STATIC_LIBRARY = "STATIC_LIBRARY"
-#     SHARED_LIBRARY = "SHARED_LIBRARY"
-#     MODULE_LIBRARY = "MODULE_LIBRARY"
-#     OBJECT_LIBRARY = "OBJECT_LIBRARY"
-#     INTERFACE_LIBRARY = "INTERFACE_LIBRARY"
-#     UTILITY = "UTILITY"
+class TargetType(StrEnum):
+    """
+    Encapsulates the possible target types.
+    """
+
+    EXECUTABLE = "EXECUTABLE"
+    STATIC_LIBRARY = "STATIC_LIBRARY"
+    SHARED_LIBRARY = "SHARED_LIBRARY"
+    MODULE_LIBRARY = "MODULE_LIBRARY"
+    OBJECT_LIBRARY = "OBJECT_LIBRARY"
+    INTERFACE_LIBRARY = "INTERFACE_LIBRARY"
+    UTILITY = "UTILITY"
 
 
 # @dataclass
@@ -108,10 +112,10 @@ class Target:
 
     id: str
     name: str
+    target_type: TargetType
     # abstract: Optional[bool]
     # symbolic: Optional[bool]
     # backtrace: Optional[int]
-    # target_type: TargetType
     # imported: Optional[bool]
     # local: Optional[bool]
     # folder: Optional[Folder]
@@ -137,4 +141,4 @@ def load_target(filepath: str) -> Target:
     """
     with open(filepath, encoding="utf-8", mode="r") as target_file:
         data = json.load(target_file)
-        return Target(data["id"], data["name"])
+        return Target(data["id"], data["name"], data["type"])

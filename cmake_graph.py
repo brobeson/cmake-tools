@@ -107,7 +107,9 @@ def write_targets(targets: List[target.Target]) -> None:
     with open("targets.puml", encoding="utf-8", mode="w") as puml_file:
         puml_file.write("@startuml\n\n")
         for t in targets:
-            puml_file.write(f"[{t.name}]\n")
+            puml_file.write(
+                f"[{t.name}] <<{t.target_type.lower().replace("_", " ")}>>\n"
+            )
         puml_file.write("@enduml")
 
 

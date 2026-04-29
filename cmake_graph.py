@@ -11,10 +11,12 @@ import pathlib
 from pprint import pprint
 import subprocess
 import sys
-from typing import Optional
+from typing import List, Optional
+from cmake_file_api import target
 
 
 def main() -> int:
+    current_directory = os.getcwd()
     arguments = parse_command_line()
     build_dir = arguments.p if arguments.p is not None else find_existing_build_dir()
     if build_dir is None:
@@ -23,9 +25,11 @@ def main() -> int:
     if not arguments.no_config:
         write_query_file(build_dir)
         run_cmake(build_dir)
-    index = read_reply_index(build_dir)
-    reply = read_code_model(build_dir, get_code_model_file(index))
+    os.chdir(os.path.join(build_dir, ".cmake", "api", "v1", "reply"))
+    index = read_reply_index()
+    reply = read_code_model(get_code_model_file(index))
     targets = get_targets(reply)
+    os.chdir(current_directory)
     write_targets(targets)
     return 0
 
@@ -67,11 +71,10 @@ def run_cmake(build_dir: str) -> None:
         sys.exit(result.returncode)
 
 
-def read_reply_index(build_dir: str) -> dict:
-    reply_dir = os.path.join(build_dir, ".cmake", "api", "v1", "reply")
-    index_files = list(glob.glob(os.path.join(reply_dir, "index-*.json")))
+def read_reply_index() -> dict:
+    index_files = list(glob.glob("index-*.json"))
     if not index_files:
-        sys.exit(f"Failed to find CMake's reply index file in {reply_dir}")
+        sys.exit(f"Failed to find CMake's reply index file in {os.getcwd()}")
     if len(index_files) > 1:
         index_files.sort()
     with open(index_files[0], mode="r", encoding="utf-8") as index_file:
@@ -85,9 +88,8 @@ def get_code_model_file(reply_index: dict) -> str:
     ]
 
 
-def read_code_model(build_dir: str, file_path: str) -> dict:
-    reply_file_path = os.path.join(build_dir, ".cmake", "api", "v1", "reply", file_path)
-    with open(reply_file_path, mode="r", encoding="utf-8") as reply_file:
+def read_code_model(file_path: str) -> dict:
+    with open(file_path, mode="r", encoding="utf-8") as reply_file:
         reply = json.load(reply_file)
     return reply
 
@@ -95,15 +97,17 @@ def read_code_model(build_dir: str, file_path: str) -> dict:
 def get_targets(code_model: dict) -> list:
     targets: list = code_model["configurations"][0]["targets"]
     targets.extend(code_model["configurations"][0]["abstractTargets"])
-    targets = list(filter(lambda t: t["name"] != "Git::Git", targets))
+    # targets = list(filter(lambda t: t["name"] != "Git::Git", targets))
+    target_files = [t["jsonFile"] for t in targets]
+    targets = [target.load_target(f) for f in target_files]
     return targets
 
 
-def write_targets(targets: list) -> None:
+def write_targets(targets: List[target.Target]) -> None:
     with open("targets.puml", encoding="utf-8", mode="w") as puml_file:
         puml_file.write("@startuml\n\n")
-        for target in targets:
-            puml_file.write(f"[{target['name']}]\n")
+        for t in targets:
+            puml_file.write(f"[{t.name}]\n")
         puml_file.write("@enduml")
 
 

@@ -1,18 +1,24 @@
 """foo"""
 
 # cspell: ignore brobeson codemodel
-# pylint: disable=missing-function-docstring
+# pylint: disable=missing-function-docstring,missing-class-docstring
 
 import argparse
+from dataclasses import dataclass
 import glob
 import json
 import os.path
 import pathlib
-from pprint import pprint
 import subprocess
 import sys
 from typing import List, Optional
 from cmake_file_api import target
+
+
+@dataclass
+class Target:
+    name: str
+    type: str = ""
 
 
 def main() -> int:
@@ -95,10 +101,13 @@ def read_code_model(file_path: str) -> dict:
 
 
 def get_targets(code_model: dict) -> list:
-    targets: list = code_model["configurations"][0]["targets"]
-    targets.extend(code_model["configurations"][0]["abstractTargets"])
-    target_files = [t["jsonFile"] for t in targets]
-    targets = [target.load_target(f) for f in target_files]
+    targets: list[Target] = []
+    configuration = code_model["configurations"][0]
+    if "targets" in configuration:
+        targets.extend(configuration["targets"])
+    if "abstractTargets" in configuration:
+        targets.extend(configuration["abstractTargets"])
+    # targets = list(filter(lambda t: t["name"] != "Git::Git", targets))
     return targets
 
 

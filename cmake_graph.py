@@ -97,20 +97,20 @@ def read_code_model(file_path: str) -> dict:
 def get_targets(code_model: dict) -> list:
     targets: list = code_model["configurations"][0]["targets"]
     targets.extend(code_model["configurations"][0]["abstractTargets"])
-    # targets = list(filter(lambda t: t["name"] != "Git::Git", targets))
     target_files = [t["jsonFile"] for t in targets]
     targets = [target.load_target(f) for f in target_files]
     return targets
 
 
 def write_targets(targets: List[target.Target]) -> None:
+    print("[1/1] Writing targets.puml")
     with open("targets.puml", encoding="utf-8", mode="w") as puml_file:
         puml_file.write("@startuml\n\n")
         for t in targets:
             puml_file.write(
                 f"[{t.name}] <<{t.target_type.lower().replace("_", " ")}>>\n"
             )
-        puml_file.write("@enduml")
+        puml_file.write("\n@enduml")
 
 
 if __name__ == "__main__":

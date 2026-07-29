@@ -3,8 +3,7 @@
 from dataclasses import dataclass
 import json
 from enum import StrEnum
-
-# from typing import List, Optional
+from typing import List, Optional
 
 
 # todo Move this to a common file. It's probably in other parts of the API.
@@ -142,3 +141,16 @@ def load_target(filepath: str) -> Target:
     with open(filepath, encoding="utf-8", mode="r") as target_file:
         data = json.load(target_file)
         return Target(data["id"], data["name"], data["type"])
+
+
+def find_target(targets: List[Target], id: str) -> Optional[Target]:
+    """
+    Find the target in a list with a specific ID.
+
+    Args:
+        targets (List[Target]): _description_
+        id (str): _description_
+
+    Returns:
+        Target: _description_
+    """

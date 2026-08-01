@@ -1,128 +1,153 @@
 """foo"""
 
 # cspell: ignore brobeson codemodel
-# pylint: disable=missing-function-docstring,missing-class-docstring
+# pylint: disable=missing-function-docstring
+
 
 import argparse
-from dataclasses import dataclass
+import dataclasses
+import enum
 import glob
 import json
-import os.path
-import pathlib
-import subprocess
+import os
 import sys
 from typing import List, Optional
-from cmake_file_api import target
 
 
-@dataclass
+class TargetType(enum.StrEnum):
+    """
+    Encapsulates the possible target types.
+    """
+
+    EXECUTABLE = "EXECUTABLE"
+    STATIC_LIBRARY = "STATIC_LIBRARY"
+    SHARED_LIBRARY = "SHARED_LIBRARY"
+    MODULE_LIBRARY = "MODULE_LIBRARY"
+    OBJECT_LIBRARY = "OBJECT_LIBRARY"
+    INTERFACE_LIBRARY = "INTERFACE_LIBRARY"
+    UTILITY = "UTILITY"
+
+
+@dataclasses.dataclass
 class Target:
+    """
+    Represents a target read from a ``target-<name>...json`` file.
+
+    Attributes:
+        id(str): The ``id`` field of the JSON object.
+        name(str): The ``name`` field of the JSON object.
+    """
+
+    id: str
     name: str
-    type: str = ""
+    target_type: TargetType
+    dependencies: List[str]
 
 
-def main() -> int:
-    current_directory = os.getcwd()
+def main() -> None:
     arguments = parse_command_line()
-    build_dir = arguments.p if arguments.p is not None else find_existing_build_dir()
-    if build_dir is None:
-        sys.exit("No build directory found")
-    print(f"Found build directory {build_dir}")
-    if not arguments.no_config:
-        write_query_file(build_dir)
-        run_cmake(build_dir)
-    os.chdir(os.path.join(build_dir, ".cmake", "api", "v1", "reply"))
-    index = read_reply_index()
-    reply = read_code_model(get_code_model_file(index))
-    targets = get_targets(reply)
-    os.chdir(current_directory)
-    write_targets(targets)
-    return 0
+    cmake_binary_dir = os.getcwd()
+    api_reply_dir = os.path.join(cmake_binary_dir, ".cmake", "api", "v1", "reply")
+    targets = filter_targets(read_target_replies(api_reply_dir))
+    write_component_diagrams(cmake_binary_dir, targets)
+    sys.exit(0)
 
 
 def parse_command_line() -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--no-config", action="store_true")
-    parser.add_argument("-p")
-    arguments = parser.parse_args()
-    return arguments
+    parser = argparse.ArgumentParser(description="foo")
+    parser.add_argument("top-level-target")
+    return parser.parse_args()
 
 
-def find_existing_build_dir() -> Optional[str]:
-    cache_files = list(glob.glob("**/CMakeCache.txt", recursive=True))
-    if not cache_files:
-        return None
-    if len(cache_files) > 1:
-        sys.exit(
-            "Found multiple build directories. Remove all but one, or specify the build directory "
-            "to use."
+def read_target_replies(api_reply_dir: str) -> List[Target]:
+    os.chdir(api_reply_dir)
+    target_files = glob.glob("target-*.json")
+    if not target_files:
+        sys.exit(f"Failed to find target reply files in {api_reply_dir}")
+    return [read_target_reply(f) for f in target_files]
+
+
+def read_target_reply(filepath: str) -> Target:
+    with open(filepath, encoding="utf-8", mode="r") as f:
+        reply = json.load(f)
+        return Target(
+            reply["id"],
+            reply["name"],
+            reply["type"],
+            (
+                [d["id"] for d in reply["compileDependencies"]]
+                if "compileDependencies" in reply
+                else []
+            ),
         )
-    return os.path.dirname(cache_files[0])
 
 
-def write_query_file(build_dir: str) -> None:
-    query_dir = os.path.join(
-        build_dir, ".cmake", "api", "v1", "query", "client-brobeson-cmake-tools"
-    )
-    query_file = os.path.join(query_dir, "codemodel-v2")
-    if os.path.exists(query_file):
-        return
-    os.makedirs(query_dir, exist_ok=True)
-    pathlib.Path(query_file).touch()
-
-
-def run_cmake(build_dir: str) -> None:
-    result = subprocess.run(["cmake", build_dir], check=False)
-    if result.returncode != 0:
-        sys.exit(result.returncode)
-
-
-def read_reply_index() -> dict:
-    index_files = list(glob.glob("index-*.json"))
-    if not index_files:
-        sys.exit(f"Failed to find CMake's reply index file in {os.getcwd()}")
-    if len(index_files) > 1:
-        index_files.sort()
-    with open(index_files[0], mode="r", encoding="utf-8") as index_file:
-        index_content = json.load(index_file)
-    return index_content
-
-
-def get_code_model_file(reply_index: dict) -> str:
-    return reply_index["reply"]["client-brobeson-cmake-tools"]["codemodel-v2"][
-        "jsonFile"
+def filter_targets(targets: List[Target]) -> List[Target]:
+    targets_to_exclude = [
+        "Python3::InterpreterMultiConfig",
+        "diagrams.component",
+        "Python3::Interpreter",
+        "Git::Git",
     ]
+    return list(filter(lambda t: t.name not in targets_to_exclude, targets))
 
 
-def read_code_model(file_path: str) -> dict:
-    with open(file_path, mode="r", encoding="utf-8") as reply_file:
-        reply = json.load(reply_file)
-    return reply
+def write_component_diagrams(cmake_binary_dir: str, targets: List[Target]) -> None:
+    diagram_dir = os.path.join(cmake_binary_dir, "component_diagrams")
+    os.makedirs(diagram_dir, exist_ok=True)
+    write_component_diagram(os.path.join(diagram_dir, "targets.puml"), targets)
 
 
-def get_targets(code_model: dict) -> list:
-    targets: list[Target] = []
-    configuration = code_model["configurations"][0]
-    if "targets" in configuration:
-        targets.extend(configuration["targets"])
-    if "abstractTargets" in configuration:
-        targets.extend(configuration["abstractTargets"])
-    # targets = list(filter(lambda t: t["name"] != "Git::Git", targets))
-    return targets
-
-
-def write_targets(targets: List[target.Target]) -> None:
-    print("[1/1] Writing targets.puml")
-    with open("targets.puml", encoding="utf-8", mode="w") as puml_file:
-        puml_file.write("@startuml\n\n")
+def write_component_diagram(filepath: str, targets: List[Target]) -> None:
+    print("Writing", filepath)
+    with open(filepath, encoding="utf-8", mode="w") as f:
+        f.write("@startuml\n\n")
         for t in targets:
-            puml_file.write(
-                f"[{t.name}] <<{t.target_type.lower().replace("_", " ")}>>\n"
-            )
-        puml_file.write("\n@enduml")
+            write_target_to_diagram(f, t)
+        # Keep these two loops separate. write_target_to_diagram()
+        # accounts for grouping targets by CMake namespace. All packages
+        # need to be in the puml file before the components are otherwise
+        # referenced.
+        for t in targets:
+            write_dependencies_to_diagram(f, t, targets)
+        f.write("\n@enduml\n")
 
 
-if __name__ == "__main__":
-    sys.exit(main())
-else:
-    sys.exit("This is a script, not an importable module.")
+def write_target_to_diagram(file, target: Target) -> None:
+    parts = []
+    if "." in target.name:
+        parts = target.name.split(".")
+        print(parts)
+    elif "::" in target.name:
+        parts = target.name.split("::")
+        print(parts)
+    if parts:
+        print("writing parts")
+        file.writelines(
+            [
+                f'package "{parts[0]}" {{\n',
+                f"[{parts[1]}] <<{target.target_type.lower().replace("_", " ")}>> as {target.name}\n"
+                "}\n",
+            ]
+        )
+    else:
+        file.write(
+            f"[{target.name}] <<{target.target_type.lower().replace("_", " ")}>>\n"
+        )
+
+
+def write_dependencies_to_diagram(file, target: Target, targets: List[Target]) -> None:
+    for d in target.dependencies:
+        dependency = find_target(targets, d)
+        if dependency:
+            file.write(f"[{target.name}] --> [{dependency.name}]\n")
+
+
+def find_target(targets: List[Target], target_id: str) -> Optional[Target]:
+    for t in targets:
+        if t.id == target_id:
+            return t
+    return None
+
+
+main()

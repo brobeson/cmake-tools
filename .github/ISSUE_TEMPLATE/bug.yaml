@@ -1,0 +1,34 @@
+name: Bug Report
+description: Report a bug in CMake Tools
+labels: [bug]
+projects: [brobeson/17]
+assignees: [brobeson]
+body:
+  - type: input
+    attributes:
+      label: CMake Tools version
+      description: The Git tag, branch, or commit that exhibits the faulty behavior
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Observed behavior
+      description: What actually occurred
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected behavior
+      description: What behavior did you expect
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Steps to reproduce
+      description: List the steps to reproduce the observed behavior
+      placeholder: |
+        1. First do this
+        2. Then do that
+        3. Finally, do the 3rd thing
+    validations:
+      required: true
